@@ -3,7 +3,6 @@ var q = require('q');
 /**
  *
  * webdriverio.remote()で作成したclientオブジェクトにfunctionを追加し、拡張します。
- * Returns a list of attribute values if selector matches multiple elements.
  *
  * <example>
     client = webdriverio.remote({ desiredCapabilities: {browserName: 'chrome'} });

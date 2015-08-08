@@ -1,11 +1,13 @@
 var chai        = require('chai'),
     expect      = chai.expect,
+    assert      = chai.assert,
     webdriverio = require('webdriverio'),
     gAA         = require('../../../index')  //googlesites-admin-automation
 ;
+console.log(assert);
 
 describe('google login tests', function(){
-    var user = {email: 'y41i3303@gmail.com', password: 'fromtrainwindow'};
+    var user = {email: 'hoge@hoge.com', password: 'hogehoge'};
 //    this.timeout(99999999);
     client = {};
 
