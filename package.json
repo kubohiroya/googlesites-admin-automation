@@ -7,5 +7,10 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "chai": "^3.2.0",
+    "q": "^1.4.1",
+    "webdriverio": "^3.1.0"
+  }
 }
