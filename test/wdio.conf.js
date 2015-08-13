@@ -8,7 +8,7 @@ exports.config = {
     // file.
     //
     specs: [
-        './specs/**/*.js'
+        './specs/*.js'
     ],
     // Patterns to exclude.
     exclude: [

@@ -1,4 +1,6 @@
-var q = require('q');
+var q     = require('q');
+var async = require('async');
+var sprintf = require('util').format;
 
 /**
  *
@@ -70,17 +72,25 @@ module.exports.expandClient = function (client) {
  *
  */
 module.exports.login = function (client, user) {
-	return client.url('https://accounts.google.com/ServiceLogin?sacu=1').then(function(){
-		return client.setValueFor('#Email', user.email).then(function(){
-			return client.clickFor('#next').then(function(){
-				return client.setValueFor('#Passwd', user.password).then(function(){
-					return client.clickFor('#signIn').then(function(){
-						return client.waitForExist("//a[contains(@title, '"+user.email+"')]", 5*1000);
-					});
-				});
-			});
-		});
-	});
+  function enterEmail(user){
+    return client.setValueFor('#Email', user.email).then(function(){
+      return client.clickFor('#next')
+    });
+  }
+
+  function enterPass(user){
+    return client.setValueFor('#Passwd', user.password).then(function(){
+      return client.clickFor('#signIn').then(function(){
+        return client.waitForExist("//a[contains(@title, '"+user.email+"')]", 5*1000);
+      });
+    });
+  }
+
+  return client.url('https://accounts.google.com/ServiceLogin?sacu=1').then(function(){
+    return enterEmail(user).then(function(){
+      return enterPass(user);
+    });
+  });
 }
 
 /**
@@ -88,12 +98,85 @@ module.exports.login = function (client, user) {
  * Googleサイトの共有と権限を設定する画面に遷移します。
  *
  * <example>
- *	gaa.go(client)
+ *	gaa.goSharingPermissions(client, url)
  * </example>
  *
- * @param {Object} client 		clientオブジェクト
+ * @param {Object} client     clientオブジェクト
+ * @param {String} url        url
  *
  */
-module.exports.goCommonsharing = function (client) {
-	return client.url('https://sites.google.com/site/y41i3303/system/app/pages/admin/commonsharing');
+module.exports.goSharingPermissions = function (client, url) {
+	return client.url(url + 'system/app/pages/admin/commonsharing');
+}
+
+var SEL_IFRAME_SHARE_SETTING = "//iframe[@title='共有設定']";
+var SEL_INVITE_EMAIL = "//td[@id=':p.inviter']//textarea";
+var SEL_INVITE_PERMISSION_LIST = "//td[@id=':p.inviter']//div[@role='listbox']";
+var SEL_INVITE_PERMISSION_LIST_OPTION = "//div[@role='listbox']/div[@role='menuitemradio']//div[contains(text(), '%s')]/..";
+var SEL_SEND_NOTICE = "//span[@id=':p.sendNotifications']";
+var SEL_OK = "//div[@id=':p.share']";
+var SEL_OK_CONFIRM = "//button[@name='sio']";
+
+function scopeIframe(selectorIframe){
+    return client.waitForExist(selectorIframe, function(err, res){
+        return client.element(selectorIframe, function(err, res){
+            return client.frame(res.value);
+        });
+    });
+}
+
+function getLevelText(level){
+  if(level === 'can edit'){
+    return '編集者';
+  }else if(level === 'can view'){
+    return '閲覧者';
+  }
+}
+
+function setPermissionSiteEach(permission){
+  return client.setValueFor(SEL_INVITE_EMAIL, permission.email).then(function(){
+    //リストボックスを選択
+    return client.clickFor(SEL_INVITE_PERMISSION_LIST).then(function(){
+      //オプションを選択
+      return client.clickFor(sprintf(SEL_INVITE_PERMISSION_LIST_OPTION, getLevelText(permission.level))).then(function(){
+        //メールで通知をOFF
+        return client.clickFor(SEL_SEND_NOTICE).then(function(){
+          //OKボタン押下
+          return client.clickFor(SEL_OK).then(function(){
+            //OK(再確認)ボタン押下
+            return client.clickFor(SEL_OK_CONFIRM).then(function(){
+              //登録が完了するまで待つ
+              return client.waitForVisible(SEL_INVITE_EMAIL);
+            });
+          });
+        });
+      });
+    });
+  });
+}
+
+/**
+ *
+ * Googleサイトの共有と権限を設定します。
+ *
+ * <example>
+ *  gaa.setPermissionSite(client, permissionList)
+ * </example>
+ *
+ * @param {Object} client     clientオブジェクト
+ * @param {Array} permissionList        permissionオブジェクトの配列
+ *
+ */
+ module.exports.setPermissionSite = function (client, permissionList) {
+  var d = q.defer();
+  return scopeIframe(SEL_IFRAME_SHARE_SETTING).then(function(){
+    async.forEachSeries(permissionList, function(permission, cb){
+      setPermissionSiteEach(permission).then(function(){
+        cb();
+      });
+     }, function() {
+       d.resolve();
+    });
+    return d.promise;
+  });
 }

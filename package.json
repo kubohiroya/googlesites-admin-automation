@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "async": "^1.4.2",
     "chai": "^3.2.0",
     "q": "^1.4.1",
     "webdriverio": "^3.1.0"

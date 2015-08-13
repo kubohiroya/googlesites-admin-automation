@@ -1,0 +1,129 @@
+var chai        = require('chai'),
+    expect      = chai.expect,
+    assert      = chai.assert,
+    webdriverio = require('webdriverio'),
+    gAA         = require('../../index')  //googlesites-admin-automation
+;
+
+var CONFIG = {
+    siteURL: 'https://sites.google.com/a/cuc.global/dev-y41i3303-01/',
+    owner: {
+        email: 'hoge@hoge.com',
+        password:'hogehoge'
+    },
+
+    permissions_test:[
+        {
+            email: 'testuser02@cuc.global',
+            level: 'can edit',
+            pages: [
+                {name: 'home', level: 'can view'},
+                {name: 'page1', level: 'can edit'}
+            ]
+        },
+        {
+            email: 'testuser03@cuc.global',
+            level: 'can view',
+            pages: [
+                {name: 'home', level: 'can edit'},
+                {name: 'page1', level: 'can view'}
+            ]
+        },
+        {
+            email: 'testuser04@cuc.global',
+            level: 'can edit',
+            pages: [
+                {name: 'home', level: 'can view'},
+                {name: 'page1', level: 'can view'}
+            ]
+        }
+    ],
+
+    // permissions:[
+    //     {
+    //         pageURL: "https://sites.google.com/a/example.com/a",
+    //         editors: ["a@exmaple.com", "aa@example.com"],
+    //         viewers: ["aaa@example.com"]
+    //     },
+    //     {
+    //         pageURL: "https://sites.google.com/a/example.com/b",
+    //         editors: ["b@exmaple.com", "bb@example.com"],
+    //         viewers: ["bbb@example.com"]
+    //     }
+    // ]
+}
+
+describe('googlesites-admin-automation tests', function(){
+    this.timeout(99999999);
+    client = {};
+
+    before(function(done){
+            client = webdriverio.remote({ desiredCapabilities: {browserName: 'chrome'} });
+            client.init(done);
+            gAA.expandClient(client);
+    });
+
+    it('ログインできる',function(done) {
+        gAA.login(client, CONFIG.owner).then(function(){
+            client.isExisting("//a[contains(@title, '" + CONFIG.owner.email + "')]")
+                .then(function(exist){
+                expect(exist).to.equal(true);
+            }).call(done);
+        });
+    });
+
+    it('Googleサイトの権限設定画面に遷移する',function(done) {
+        gAA.goSharingPermissions(client, CONFIG.siteURL).then(function(){
+            client.getTitle()
+                .then(function(txt){
+                    expect(txt).to.include('共有と権限');
+                })
+                .call(done);
+//            client.saveScreenshot("ss1.png");
+        });
+    });
+
+    it('サイトレベルでのユーザ毎権限を設定する',function(done){
+        //サイトをクリックする
+        gAA.setPermissionSite(client, CONFIG.permissions_test).then(function() {
+          client.call(done);
+        });
+    });
+
+    it('ページレベルでのユーザ毎権限を設定する',function(done){
+        client.call(done);  //TODO
+        //存在するページをすべて開いた状態にする
+        //ページをクリックする
+        //user数分ループ
+        //level: Is owner, Can edit, Can view
+        //gAA.setPermissionPage();
+    });
+
+    describe('Googleサイトで新規サイトを作成する', function(){
+        it('存在するサイトのオーナーが指定されたユーザではない場合にはエラー終了する', function(done){
+            assert.ok('not fix');
+            client.call(done);  //TODO
+            //client.url('https://sites.google.com/a/cuc.global');
+            //作成ボタンを押す
+            //{siteTitle: '開発・テスト用：y41i3303-01', siteName: 'dev-y41i3303-01'}
+            //作成ボタンを押す
+            //https://sites.google.com/a/cuc.global/dev-y41i3303-01/
+            //ページを作成する
+            //gAA.goSharingPermissions('https://sites.google.com/a/cuc.global/dev-y41i3303-01/')
+            //ページレベルの権限を有効にするボタンを押す
+            // id="sites-admin-share-disable-plp" display: none;"ページ レベルの権限を無効にする
+            // id="sites-admin-share-enable-plp"ページ レベルの権限を有効にする
+            // <button name="ok">ページ レベルの権限を有効にする</button>
+            //アクセスできるユーザーとして、「リンクを知っている 千葉商科大学国際教養学部 の全員が閲覧できます」を選択
+        });
+
+        it('指定されたサイトがすでに存在する場合には、(1)へ進む', function(done){
+            assert.ok('not fix');
+            client.call(done);  //TODO
+        });
+    });
+
+    after(function(done) {
+        client.end(done);
+    });
+});
