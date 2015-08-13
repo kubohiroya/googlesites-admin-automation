@@ -1,7 +1,7 @@
 var q     = require('q');
 var async = require('async');
 var sprintf = require('util').format;
-
+var utils = require('./lib/utils');
 /**
  *
  * webdriverio.remote()で作成したclientオブジェクトにfunctionを追加し、拡張します。
@@ -109,7 +109,6 @@ module.exports.goSharingPermissions = function (client, url) {
 	return client.url(url + 'system/app/pages/admin/commonsharing');
 }
 
-var SEL_IFRAME_SHARE_SETTING = "//iframe[@title='共有設定']";
 var SEL_INVITE_EMAIL = "//td[@id=':p.inviter']//textarea";
 var SEL_INVITE_PERMISSION_LIST = "//td[@id=':p.inviter']//div[@role='listbox']";
 var SEL_INVITE_PERMISSION_LIST_OPTION = "//div[@role='listbox']/div[@role='menuitemradio']//div[contains(text(), '%s')]/..";
@@ -117,28 +116,12 @@ var SEL_SEND_NOTICE = "//span[@id=':p.sendNotifications']";
 var SEL_OK = "//div[@id=':p.share']";
 var SEL_OK_CONFIRM = "//button[@name='sio']";
 
-function scopeIframe(selectorIframe){
-    return client.waitForExist(selectorIframe, function(err, res){
-        return client.element(selectorIframe, function(err, res){
-            return client.frame(res.value);
-        });
-    });
-}
-
-function getLevelText(level){
-  if(level === 'can edit'){
-    return '編集者';
-  }else if(level === 'can view'){
-    return '閲覧者';
-  }
-}
-
 function setPermissionSiteEach(permission){
   return client.setValueFor(SEL_INVITE_EMAIL, permission.email).then(function(){
     //リストボックスを選択
     return client.clickFor(SEL_INVITE_PERMISSION_LIST).then(function(){
       //オプションを選択
-      return client.clickFor(sprintf(SEL_INVITE_PERMISSION_LIST_OPTION, getLevelText(permission.level))).then(function(){
+      return client.clickFor(sprintf(SEL_INVITE_PERMISSION_LIST_OPTION, utils.getLevelText(permission.level))).then(function(){
         //メールで通知をOFF
         return client.clickFor(SEL_SEND_NOTICE).then(function(){
           //OKボタン押下
@@ -169,7 +152,7 @@ function setPermissionSiteEach(permission){
  */
  module.exports.setPermissionSite = function (client, permissionList) {
   var d = q.defer();
-  return scopeIframe(SEL_IFRAME_SHARE_SETTING).then(function(){
+  return utils.scopeIframe(utils.SEL_IFRAME_SHARE_SETTING).then(function(){
     async.forEachSeries(permissionList, function(permission, cb){
       setPermissionSiteEach(permission).then(function(){
         cb();

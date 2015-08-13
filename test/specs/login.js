@@ -1,7 +1,11 @@
 var chai        = require('chai'),
     expect      = chai.expect,
     assert      = chai.assert,
+    async       = require('async');
     webdriverio = require('webdriverio'),
+    q           = require('q'),
+    sprintf      = require('util').format,
+    utils       = require('../../lib/utils'),
     gAA         = require('../../index')  //googlesites-admin-automation
 ;
 
@@ -84,10 +88,39 @@ describe('googlesites-admin-automation tests', function(){
     });
 
     it('サイトレベルでのユーザ毎権限を設定する',function(done){
-        //サイトをクリックする
+        var result = [];
+        var d = q.defer();
+        var SELECTOR = "//td[@role='rowheader']//span[contains(text(),'%s')]/../../../../td[@role='gridcell']//div[@role='option']";
+        var func = function(permission){
+            return client.getTextFor(sprintf(SELECTOR, permission.email)).then(function(txt){
+                result.push({
+                    email: permission.email, 
+                    txtExpect: txt,
+                    txtActual: utils.getLevelText(permission.level)
+                });
+            });
+        };
+
         gAA.setPermissionSite(client, CONFIG.permissions_test).then(function() {
-          client.call(done);
+            async.forEachSeries(CONFIG.permissions_test, function(permission, cb){
+                func(permission).then(function(){
+                    cb();
+                });
+            }, function(){
+                d.resolve();
+            })
+            ;
+            return d.promise;
+      }).then(function(){
+        result.forEach(function(obj){
+            assert.equal(obj.txtExpect, obj.txtActual, obj.email);
         });
+        client.call(done);
+      }).catch(function(err){
+        //TODO: assert()でfailせずグリーンになってしまうので、ここでコンソールに出力しておく。
+        console.log(err);
+        client.call(done);
+      });
     });
 
     it('ページレベルでのユーザ毎権限を設定する',function(done){
