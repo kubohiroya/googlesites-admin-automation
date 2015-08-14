@@ -83,7 +83,6 @@ describe('googlesites-admin-automation tests', function(){
                     expect(txt).to.include('共有と権限');
                 })
                 .call(done);
-//            client.saveScreenshot("ss1.png");
         });
     });
 
@@ -123,13 +122,25 @@ describe('googlesites-admin-automation tests', function(){
       });
     });
 
-    it('ページレベルでのユーザ毎権限を設定する',function(done){
-        client.call(done);  //TODO
-        //存在するページをすべて開いた状態にする
+    it('ページレベルのユーザ毎権限を有効化する',function(done){
+        return gAA.setActivePagePermisson(client).then(function(){
+            return client.actionFor(utils.SEL_PAGE_DISABLE, function(){
+                return client.isVisible(utils.SEL_PAGE_DISABLE).then(function(isVisible){
+                    expect(isVisible).to.equal(true);
+                    client.call(done);
+                });
+            });
+        });
+    });
+
+    it('ページレベルの権限を設定する',function(done){
         //ページをクリックする
-        //user数分ループ
-        //level: Is owner, Can edit, Can view
-        //gAA.setPermissionPage();
+        //「ホーム と同じ権限とメンバーを使用します。 」の右側にある「変更」ボタンを押す
+        //「独自の権限を使用する」のラジオボタンを選択
+        //「独自の権限: 新しいユーザーをこのページに追加しない」のラジオボタンを選択
+        //「保存」をクリック
+        //「アクセスできるユーザー」のうち、設定上不要なユーザについて、各行右端の×ボタンをクリック
+        client.call(done);  //TODO
     });
 
     describe('Googleサイトで新規サイトを作成する', function(){

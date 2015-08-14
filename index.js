@@ -163,3 +163,28 @@ function setPermissionSiteEach(permission){
     return d.promise;
   });
 }
+
+/**
+ *
+ * Googleサイトのページレベルのユーザ毎権限を有効化します。
+ *
+ * <example>
+ *  gaa.setActivePagePermisson(client)
+ * </example>
+ *
+ * @param {Object} client     clientオブジェクト
+ *
+ */
+ module.exports.setActivePagePermisson = function (client) {
+  return client.isVisible(utils.SEL_PAGE_ENABLE).then(function(isVisible){
+    if(isVisible){
+      return client.clickFor(utils.SEL_PAGE_ENABLE).then(function(){
+        return client.clickFor(utils.SEL_PAGE_ENABLE_CONFIRM).then(function(){
+          return client.waitForVisible(utils.SEL_PAGE_DISABLE);
+        });
+      });
+    }else{
+      console.log("alredy actived.");
+    }
+  });
+}
