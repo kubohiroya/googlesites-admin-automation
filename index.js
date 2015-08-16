@@ -109,34 +109,7 @@ module.exports.goSharingPermissions = function (client, url) {
 	return client.url(url + 'system/app/pages/admin/commonsharing');
 }
 
-var SEL_INVITE_EMAIL = "//td[@id=':p.inviter']//textarea";
-var SEL_INVITE_PERMISSION_LIST = "//td[@id=':p.inviter']//div[@role='listbox']";
-var SEL_INVITE_PERMISSION_LIST_OPTION = "//div[@role='listbox']/div[@role='menuitemradio']//div[contains(text(), '%s')]/..";
-var SEL_SEND_NOTICE = "//span[@id=':p.sendNotifications']";
-var SEL_OK = "//div[@id=':p.share']";
-var SEL_OK_CONFIRM = "//button[@name='sio']";
 
-function setPermissionSiteEach(permission){
-  return client.setValueFor(SEL_INVITE_EMAIL, permission.email).then(function(){
-    //リストボックスを選択
-    return client.clickFor(SEL_INVITE_PERMISSION_LIST).then(function(){
-      //オプションを選択
-      return client.clickFor(sprintf(SEL_INVITE_PERMISSION_LIST_OPTION, utils.getLevelText(permission.level))).then(function(){
-        //メールで通知をOFF
-        return client.clickFor(SEL_SEND_NOTICE).then(function(){
-          //OKボタン押下
-          return client.clickFor(SEL_OK).then(function(){
-            //OK(再確認)ボタン押下
-            return client.clickFor(SEL_OK_CONFIRM).then(function(){
-              //登録が完了するまで待つ
-              return client.waitForVisible(SEL_INVITE_EMAIL);
-            });
-          });
-        });
-      });
-    });
-  });
-}
 
 /**
  *
@@ -147,16 +120,47 @@ function setPermissionSiteEach(permission){
  * </example>
  *
  * @param {Object} client     clientオブジェクト
- * @param {Array} permissionList        permissionオブジェクトの配列
+ * @param {Object} permission        permissionオブジェクト
  *
  */
  module.exports.setPermissionSite = function (client, permissionList) {
+  var SEL_INVITE_EMAIL = "//td[@id=':p.inviter']//textarea";
+  var SEL_INVITE_PERMISSION_LIST = "//td[@id=':p.inviter']//div[@role='listbox']";
+  var SEL_INVITE_PERMISSION_LIST_OPTION = "//div[@role='listbox']/div[@role='menuitemradio']//div[contains(text(), '%s')]/..";
+  var SEL_SEND_NOTICE = "//span[@id=':p.sendNotifications']";
+  var SEL_OK = "//div[@id=':p.share']";
+  var SEL_OK_CONFIRM = "//button[@name='sio']";
+
+  function setPermissionSiteEach(permission){
+//    return client.pause(5000).then(function(){
+    return client.setValueFor(SEL_INVITE_EMAIL, permission.email).then(function(){
+      //リストボックスを選択
+      return client.clickFor(SEL_INVITE_PERMISSION_LIST).then(function(){
+        //オプションを選択
+        return client.clickFor(sprintf(SEL_INVITE_PERMISSION_LIST_OPTION, utils.getLevelText(permission.level))).then(function(){
+          //メールで通知をOFF
+          return client.clickFor(SEL_SEND_NOTICE).then(function(){
+            //OKボタン押下
+            return client.clickFor(SEL_OK).then(function(){
+              //OK(再確認)ボタン押下
+              return client.clickFor(SEL_OK_CONFIRM).then(function(){
+                //登録が完了するまで待つ
+                return client.waitForVisible(SEL_INVITE_EMAIL);
+              });
+            });
+          });
+        });
+      });
+    });
+//    });
+  }
+
   var d = q.defer();
   return utils.scopeIframe(utils.SEL_IFRAME_SHARE_SETTING).then(function(){
-    async.forEachSeries(permissionList, function(permission, cb){
-      setPermissionSiteEach(permission).then(function(){
-        cb();
-      });
+    async.forEachSeries(utils.editPermissionList(permissionList), function(permission, cb){
+        setPermissionSiteEach(permission).then(function(){
+          cb();
+        });
      }, function() {
        d.resolve();
     });
@@ -186,5 +190,81 @@ function setPermissionSiteEach(permission){
     }else{
       console.log("alredy actived.");
     }
+  });
+}
+
+/**
+ *
+ * Googleサイトのページレベルの権限を設定します。
+ *
+ * <example>
+ *  gaa.setPermissionPage(client, pages)
+ * </example>
+ *
+ * @param {Object} client     clientオブジェクト
+ * @param {Object} pages        pagesオブジェクト
+ *
+ */
+module.exports.setPermissionPage = function (client, pages) {
+var SEL_REGISTERD_USERS = "//div[@role='button' and contains(@aria-label, 'さんを削除') and not(contains(@style, 'display: none'))]/ancestor::tr/td[@role='rowheader']/div/span[2]/span[2]";
+var SEL_DELETE = "//td[@role='rowheader']/div/span[2]/span[text()='%s']/ancestor::tr//div[@role='button' and contains(@aria-label, 'さんを削除') and not(contains(@style, 'display: none'))]";
+var SEL_DELETE_SAVE = "//div[@role='button' and text()='変更を保存']";
+var SEL_DELETE_ALERT = "//div[@role='alert']/div[text()='保存が必要な変更を加えました。']";
+  function deleteNoNeedUser(needUsers){
+      return utils.scopeIframe(utils.SEL_IFRAME_SHARE_SETTING).then(function(){
+      return client.getTextFor(SEL_REGISTERD_USERS).then(function(registeredUsers){
+        var users = utils.getNoNeedUsers(registeredUsers, needUsers);
+        console.log(users);
+        if(users.length === 0){return client;}
+        users.forEach(function(user){
+          client.clickFor(sprintf(SEL_DELETE, user));
+        });
+        return client.clickFor(SEL_DELETE_SAVE).then(function(){
+          return client.waitUntil(function(){
+            return client.isVisible(SEL_DELETE_ALERT).then(function(isVisible){
+              return !isVisible;
+            });
+          })
+        });
+      });
+      });
+  }
+
+  var SEL_BTN_SHARE = "//span[@id='sites-share-visibility-btn']/div[@role='button']";
+  var SEL_BTN_CHANGE = "//div[@id='sites-admin-share-inherits-selector']//div[contains(@id, 'changeLink')]/div[contains(text(), '変更')]";
+  var SEL_RADIO_CUSTOM = "//input[@id='permissions-custom-radio']";
+  var SEL_RADIO_INDEPENDENT = "//input[@id='permissions-ignores-radio']";
+  var SEL_PERMISSION_SAVE = "//button[contains(text(), '保存')]";
+  var SEL_PERMISSION_DESCRIPTION = "//div[contains(@id,'descriptionContainer')]/span[contains(@id, 'description')]";
+  function setPermissionPageEach(page){
+    return client.url(page.pageURL).then(function(){
+      return client.clickFor(SEL_BTN_SHARE).then(function(){
+        return client.clickFor(SEL_BTN_CHANGE).then(function(){
+          return client.clickFor(SEL_RADIO_CUSTOM).then(function(){
+            return client.clickFor(SEL_RADIO_INDEPENDENT).then(function(){
+              return client.clickFor(SEL_PERMISSION_SAVE).then(function(){
+                return client.getTextFor(SEL_PERMISSION_DESCRIPTION);
+              });
+            });
+          });
+        });
+      });
+    });
+  }
+  var d = q.defer();
+
+
+  return utils.scopeIframe(utils.SEL_IFRAME_SHARE_SETTING).then(function(){
+    async.forEachSeries(pages, function(page, cb){
+      setPermissionPageEach(page).then(function(){
+        var permissionList = {editors: page.editors, viewers:page.viewers};
+        deleteNoNeedUser(utils.editPermissionList(permissionList)).then(function(){
+          cb();
+        });
+      });
+     }, function() {
+       d.resolve();
+    });
+    return d.promise;
   });
 }
