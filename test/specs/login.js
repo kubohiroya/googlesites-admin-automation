@@ -161,28 +161,40 @@ describe('googlesites-admin-automation tests', function(){
         });
     });
 
-    describe('Googleサイトで新規サイトを作成する', function(){
-        it('存在するサイトのオーナーが指定されたユーザではない場合にはエラー終了する', function(done){
-            assert.ok('not fix');
-            client.call(done);  //TODO
-            //client.url('https://sites.google.com/a/cuc.global');
-            //作成ボタンを押す
-            //{siteTitle: '開発・テスト用：y41i3303-01', siteName: 'dev-y41i3303-01'}
-            //作成ボタンを押す
-            //https://sites.google.com/a/cuc.global/dev-y41i3303-01/
-            //ページを作成する
-            //gAA.goSharingPermissions('https://sites.google.com/a/cuc.global/dev-y41i3303-01/')
-            //ページレベルの権限を有効にするボタンを押す
-            // id="sites-admin-share-disable-plp" display: none;"ページ レベルの権限を無効にする
-            // id="sites-admin-share-enable-plp"ページ レベルの権限を有効にする
-            // <button name="ok">ページ レベルの権限を有効にする</button>
-            //アクセスできるユーザーとして、「リンクを知っている 千葉商科大学国際教養学部 の全員が閲覧できます」を選択
-        });
+    after(function(done) {
+        client.end(done);
+    });
+});
 
-        it('指定されたサイトがすでに存在する場合には、(1)へ進む', function(done){
-            assert.ok('not fix');
-            client.call(done);  //TODO
+describe('googlesites-admin-automation check tests', function(){
+    this.timeout(99999999);
+    client = {};
+
+    before(function(done){
+        client = webdriverio.remote({ desiredCapabilities: {browserName: 'chrome'} });
+        client.init(done);
+        gAA.expandClient();
+    });
+
+    it('オーナーが指定されたユーザではない場合にはエラーとなる', function(done){
+        gAA.login({email: 'hoge@hoge.com', password:'hogehoge'}).then(function(){
+            gAA.goSharingPermissions(CONFIG.siteURL).then(function(){
+                expect('Error').to.equal('Error has not occurred');
+            }).catch(function(err){
+                expect(err.message).to.equal('ログインしているユーザーはサイトのオーナーではありません。');
+                client.call(done);
+            });
         });
+    });
+
+    it('指定されたサイトがすでに存在する場合には、(1)へ進む', function(done){
+//        gAA.goSharingPermissions('http://notExist.hoge/');
+/*        gAA.checkValidSite(CONFIG.siteURL).then(function(result){
+            console.log(result);
+        });
+        assert.ok('not fix');
+*/
+        client.call(done);  //TODO
     });
 
     after(function(done) {

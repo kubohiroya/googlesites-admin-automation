@@ -103,7 +103,13 @@ module.exports.login = function (user) {
  *
  */
 module.exports.goSharingPermissions = function (url) {
-	return client.url(url + 'system/app/pages/admin/commonsharing');
+	return client.url(url + 'system/app/pages/admin/commonsharing').then(function(){
+    return client.getTitle().then(function(txt){
+      if(txt.indexOf('共有と権限') === -1){
+        throw new Error('ログインしているユーザーはサイトのオーナーではありません。');
+      }
+    });
+  });
 }
 
 /**
@@ -126,10 +132,6 @@ module.exports.goSharingPermissions = function (url) {
   var SEL_SEND_NOTICE = "//span[@id=':p.sendNotifications']";
   var SEL_OK = "//div[@id=':p.share']";
   var SEL_OK_CONFIRM = "//button[@name='sio']";
-/*
-org.openqa.selenium.WebDriverException: unknown error: Element is not clickable at point (22, 389). Other element would receive the click: <div class="ztA2jd-oKd
-M2c ztA2jd-auswjd auswjd" id=":7r" role="option" style="-webkit-user-select: none;">...</div>
-*/
   function setPermissionSiteEach(permission){
 //    return client.pause(5000).then(function(){
     return client.setValueFor(SEL_INVITE_EMAIL, permission.email).then(function(){
