@@ -16,27 +16,27 @@ var CONFIG = {
         password:'hogehoge'
     },
     editors: [
-        "testuser02@cuc.global",
-        "testuser04@cuc.global"
+        'testuser02@cuc.global',
+        'testuser04@cuc.global'
     ],
     viewers: [
-        "testuser03@cuc.global"
+        'testuser03@cuc.global'
     ],
     pages: [
         {
-            pageURL: "https://sites.google.com/a/cuc.global/dev-y41i3303-01/page1",
+            pageURL: 'https://sites.google.com/a/cuc.global/dev-y41i3303-01/page1',
             editors: [
-                "testuser02@cuc.global"
+                'testuser02@cuc.global'
             ],
             viewers: [
-                "testuser03@cuc.global"
+                'testuser03@cuc.global'
             ]
         },
         {
-            pageURL: "https://sites.google.com/a/cuc.global/dev-y41i3303-01/home",
+            pageURL: 'https://sites.google.com/a/cuc.global/dev-y41i3303-01/home',
             editors: [
-                "testuser02@cuc.global",
-                "testuser04@cuc.global"
+                'testuser02@cuc.global',
+                'testuser04@cuc.global'
             ],
             viewers: [
             ]
@@ -51,11 +51,11 @@ describe('googlesites-admin-automation tests', function(){
     before(function(done){
             client = webdriverio.remote({ desiredCapabilities: {browserName: 'chrome'} });
             client.init(done);
-            gAA.expandClient(client);
+            gAA.expandClient();
     });
 
     it('ログインできる',function(done) {
-        gAA.login(client, CONFIG.owner).then(function(){
+        gAA.login(CONFIG.owner).then(function(){
             client.isExisting("//a[contains(@title, '" + CONFIG.owner.email + "')]")
                 .then(function(exist){
                 expect(exist).to.equal(true);
@@ -64,7 +64,7 @@ describe('googlesites-admin-automation tests', function(){
     });
 
     it('Googleサイトの権限設定画面に遷移する',function(done) {
-        gAA.goSharingPermissions(client, CONFIG.siteURL).then(function(){
+        gAA.goSharingPermissions(CONFIG.siteURL).then(function(){
             client.getTitle()
                 .then(function(txt){
                     expect(txt).to.include('共有と権限');
@@ -87,7 +87,7 @@ describe('googlesites-admin-automation tests', function(){
             });
         };
         var permissionList = {editors: CONFIG.editors, viewers:CONFIG.viewers};
-        gAA.setPermissionSite(client, permissionList).then(function() {
+        gAA.setPermissionSite(permissionList).then(function() {
             async.forEachSeries(utils.editPermissionList(permissionList), function(permission, cb){
                 func(permission).then(function(){
                     cb();
@@ -111,7 +111,7 @@ describe('googlesites-admin-automation tests', function(){
 
     it('ページレベルのユーザ毎権限を有効化する',function(done){
         return client.refresh().then(function(){
-        return gAA.setActivePagePermisson(client).then(function(){
+        return gAA.setActivePagePermisson().then(function(){
             return client.refresh().then(function(){
                 return client.actionFor(utils.SEL_PAGE_DISABLE, function(){
                     return client.isVisible(utils.SEL_PAGE_DISABLE).then(function(isVisible){
@@ -139,7 +139,7 @@ describe('googlesites-admin-automation tests', function(){
             });
             });
         };
-        gAA.setPermissionPage(client, CONFIG.pages).then(function() {
+        gAA.setPermissionPage(CONFIG.pages).then(function() {
             async.forEachSeries(CONFIG.pages, function(permission, cb){
                 func(permission).then(function(){
                     cb();

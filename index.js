@@ -8,13 +8,12 @@ var utils = require('./lib/utils');
  *
  * <example>
     client = webdriverio.remote({ desiredCapabilities: {browserName: 'chrome'} });
-    gaa.init(client);
+    client.init(done);
+    gAA.expandClient();
  * </example>
  *
- * @param {Object} client      clientオブジェクト
- *
  */
-module.exports.expandClient = function (client) {
+module.exports.expandClient = function () {
   client.actionFor = function(selector, action) {
     return client.waitForExist(selector, 5 * 1000).then(function() {
       return client.waitForVisible(selector, 5 * 1000).then(function() {
@@ -64,14 +63,13 @@ module.exports.expandClient = function (client) {
  *
  * <example>
  *	var user = {email: 'hoge@hoge.com', password: 'fuga'};
- *	gaa.login(client, user);
+ *	gAA.login(user);
  * </example>
  *
- * @param {Object} client 		clientオブジェクト
  * @param {Object} user			userオブジェクト
  *
  */
-module.exports.login = function (client, user) {
+module.exports.login = function (user) {
   function enterEmail(user){
     return client.setValueFor('#Email', user.email).then(function(){
       return client.clickFor('#next')
@@ -98,39 +96,40 @@ module.exports.login = function (client, user) {
  * Googleサイトの共有と権限を設定する画面に遷移します。
  *
  * <example>
- *	gaa.goSharingPermissions(client, url)
+ *	gAA.goSharingPermissions(url)
  * </example>
  *
- * @param {Object} client     clientオブジェクト
  * @param {String} url        url
  *
  */
-module.exports.goSharingPermissions = function (client, url) {
+module.exports.goSharingPermissions = function (url) {
 	return client.url(url + 'system/app/pages/admin/commonsharing');
 }
-
-
 
 /**
  *
  * Googleサイトの共有と権限を設定します。
  *
  * <example>
- *  gaa.setPermissionSite(client, permissionList)
+ *  gAA.setPermissionSite(permissionList)
  * </example>
  *
- * @param {Object} client     clientオブジェクト
  * @param {Object} permission        permissionオブジェクト
  *
  */
- module.exports.setPermissionSite = function (client, permissionList) {
+ module.exports.setPermissionSite = function (permissionList) {
   var SEL_INVITE_EMAIL = "//td[@id=':p.inviter']//textarea";
+  var SEL_INVITE_EMAIL_SUGGEST = "//div[@role='listbox']/div[@role='option']/div[contains(text(), '%s')]/..";
+
   var SEL_INVITE_PERMISSION_LIST = "//td[@id=':p.inviter']//div[@role='listbox']";
   var SEL_INVITE_PERMISSION_LIST_OPTION = "//div[@role='listbox']/div[@role='menuitemradio']//div[contains(text(), '%s')]/..";
   var SEL_SEND_NOTICE = "//span[@id=':p.sendNotifications']";
   var SEL_OK = "//div[@id=':p.share']";
   var SEL_OK_CONFIRM = "//button[@name='sio']";
-
+/*
+org.openqa.selenium.WebDriverException: unknown error: Element is not clickable at point (22, 389). Other element would receive the click: <div class="ztA2jd-oKd
+M2c ztA2jd-auswjd auswjd" id=":7r" role="option" style="-webkit-user-select: none;">...</div>
+*/
   function setPermissionSiteEach(permission){
 //    return client.pause(5000).then(function(){
     return client.setValueFor(SEL_INVITE_EMAIL, permission.email).then(function(){
@@ -138,14 +137,21 @@ module.exports.goSharingPermissions = function (client, url) {
       return client.clickFor(SEL_INVITE_PERMISSION_LIST).then(function(){
         //オプションを選択
         return client.clickFor(sprintf(SEL_INVITE_PERMISSION_LIST_OPTION, utils.getLevelText(permission.level))).then(function(){
-          //メールで通知をOFF
-          return client.clickFor(SEL_SEND_NOTICE).then(function(){
-            //OKボタン押下
-            return client.clickFor(SEL_OK).then(function(){
-              //OK(再確認)ボタン押下
-              return client.clickFor(SEL_OK_CONFIRM).then(function(){
-                //登録が完了するまで待つ
-                return client.waitForVisible(SEL_INVITE_EMAIL);
+          return client.isVisible(sprintf(SEL_INVITE_EMAIL_SUGGEST, permission.email)).then(function(isVisible) {
+            console.log(sprintf(SEL_INVITE_EMAIL_SUGGEST, permission.email) + " isVisible:"+isVisible);
+            if(isVisible){
+              client.click(SEL_INVITE_EMAIL_SUGGEST);
+            }
+          }).then(function(){
+            //メールで通知をOFF
+            return client.clickFor(SEL_SEND_NOTICE).then(function(){
+              //OKボタン押下
+              return client.clickFor(SEL_OK).then(function(){
+                //OK(再確認)ボタン押下
+                return client.clickFor(SEL_OK_CONFIRM).then(function(){
+                  //登録が完了するまで待つ
+                  return client.waitForVisible(SEL_INVITE_EMAIL, 10*1000);
+                });
               });
             });
           });
@@ -173,13 +179,11 @@ module.exports.goSharingPermissions = function (client, url) {
  * Googleサイトのページレベルのユーザ毎権限を有効化します。
  *
  * <example>
- *  gaa.setActivePagePermisson(client)
+ *  gAA.setActivePagePermisson()
  * </example>
  *
- * @param {Object} client     clientオブジェクト
- *
  */
- module.exports.setActivePagePermisson = function (client) {
+ module.exports.setActivePagePermisson = function () {
   return client.isVisible(utils.SEL_PAGE_ENABLE).then(function(isVisible){
     if(isVisible){
       return client.clickFor(utils.SEL_PAGE_ENABLE).then(function(){
@@ -198,14 +202,13 @@ module.exports.goSharingPermissions = function (client, url) {
  * Googleサイトのページレベルの権限を設定します。
  *
  * <example>
- *  gaa.setPermissionPage(client, pages)
+ *  gAA.setPermissionPage(pages)
  * </example>
  *
- * @param {Object} client     clientオブジェクト
  * @param {Object} pages        pagesオブジェクト
  *
  */
-module.exports.setPermissionPage = function (client, pages) {
+module.exports.setPermissionPage = function (pages) {
 var SEL_REGISTERD_USERS = "//div[@role='button' and contains(@aria-label, 'さんを削除') and not(contains(@style, 'display: none'))]/ancestor::tr/td[@role='rowheader']/div/span[2]/span[2]";
 var SEL_DELETE = "//td[@role='rowheader']/div/span[2]/span[text()='%s']/ancestor::tr//div[@role='button' and contains(@aria-label, 'さんを削除') and not(contains(@style, 'display: none'))]";
 var SEL_DELETE_SAVE = "//div[@role='button' and text()='変更を保存']";
