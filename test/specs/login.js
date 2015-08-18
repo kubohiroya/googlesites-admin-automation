@@ -139,6 +139,7 @@ describe('googlesites-admin-automation tests', function(){
             });
             });
         };
+
         gAA.setPermissionPage(CONFIG.pages).then(function() {
             async.forEachSeries(CONFIG.pages, function(permission, cb){
                 func(permission).then(function(){
@@ -166,7 +167,7 @@ describe('googlesites-admin-automation tests', function(){
     });
 });
 
-describe('googlesites-admin-automation check tests', function(){
+describe('check other owner', function(){
     this.timeout(99999999);
     client = {};
 
@@ -179,7 +180,7 @@ describe('googlesites-admin-automation check tests', function(){
     it('オーナーが指定されたユーザではない場合にはエラーとなる', function(done){
         gAA.login({email: 'hoge@hoge.com', password:'hogehoge'}).then(function(){
             gAA.goSharingPermissions(CONFIG.siteURL).then(function(){
-                expect('Error').to.equal('Error has not occurred');
+                expect('Error message').to.equal('Error has not occurred');
             }).catch(function(err){
                 expect(err.message).to.equal('ログインしているユーザーはサイトのオーナーではありません。');
                 client.call(done);
@@ -187,14 +188,30 @@ describe('googlesites-admin-automation check tests', function(){
         });
     });
 
-    it('指定されたサイトがすでに存在する場合には、(1)へ進む', function(done){
-//        gAA.goSharingPermissions('http://notExist.hoge/');
-/*        gAA.checkValidSite(CONFIG.siteURL).then(function(result){
-            console.log(result);
+    after(function(done) {
+        client.end(done);
+    });
+});
+
+describe('check site exist', function(){
+    this.timeout(99999999);
+    client = {};
+
+    before(function(done){
+        client = webdriverio.remote({ desiredCapabilities: {browserName: 'chrome'} });
+        client.init(done);
+        gAA.expandClient();
+    });
+
+    it('指定されたサイトが存在しない場合にはエラーとなる', function(done){
+        gAA.login(CONFIG.owner).then(function(){
+            gAA.goSharingPermissions(CONFIG.siteURL + 'notExist/').then(function(){
+                expect('Error message').to.equal('Error has not occurred');
+            }).catch(function(err){
+                expect(err.message).to.equal('指定されたサイトが存在しません');
+                client.call(done);
+            });
         });
-        assert.ok('not fix');
-*/
-        client.call(done);  //TODO
     });
 
     after(function(done) {

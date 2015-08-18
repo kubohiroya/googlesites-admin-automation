@@ -105,8 +105,11 @@ module.exports.login = function (user) {
 module.exports.goSharingPermissions = function (url) {
 	return client.url(url + 'system/app/pages/admin/commonsharing').then(function(){
     return client.getTitle().then(function(txt){
-      if(txt.indexOf('共有と権限') === -1){
+      if(txt.indexOf('権限がありません') !== -1){
         throw new Error('ログインしているユーザーはサイトのオーナーではありません。');
+      }else if(txt.indexOf('ページが見つかりませんでした') !== -1
+            || txt.indexOf('Forbidden')　!== -1){
+        throw new Error('指定されたサイトが存在しません');
       }
     });
   });
