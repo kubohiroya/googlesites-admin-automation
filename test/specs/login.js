@@ -4,8 +4,11 @@ var chai        = require('chai'),
     async       = require('async');
     webdriverio = require('webdriverio'),
     q           = require('q'),
-    sprintf      = require('util').format,
+    sprintf     = require('util').format,
     utils       = require('../../lib/utils'),
+    SEL         = require('../../define.conf').SELECTOR;
+    TITLE       = require('../../define.conf').TITLE;
+    EMESSAGE    = require('../../define.conf').EMESSAGE;
     gAA         = require('../../index')  //googlesites-admin-automation
 ;
 
@@ -22,7 +25,7 @@ var CONFIG = {
     viewers: [
         'testuser03@cuc.global'
     ],
-    pages: [
+    permissions: [
         {
             pageURL: 'https://sites.google.com/a/cuc.global/dev-y41i3303-01/page1',
             editors: [
@@ -56,7 +59,7 @@ describe('googlesites-admin-automation tests', function(){
 
     it('ログインできる',function(done) {
         gAA.login(CONFIG.owner).then(function(){
-            client.isExisting("//a[contains(@title, '" + CONFIG.owner.email + "')]")
+            client.isExisting(sprintf(SEL.LOGINED, CONFIG.owner.email))
                 .then(function(exist){
                 expect(exist).to.equal(true);
             }).call(done);
@@ -67,7 +70,7 @@ describe('googlesites-admin-automation tests', function(){
         gAA.goSharingPermissions(CONFIG.siteURL).then(function(){
             client.getTitle()
                 .then(function(txt){
-                    expect(txt).to.include('共有と権限');
+                    expect(txt).to.include(TITLE.COMMON_SHARING);
                 })
                 .call(done);
         });
@@ -76,9 +79,8 @@ describe('googlesites-admin-automation tests', function(){
     it('サイトレベルでのユーザ毎権限を設定する',function(done){
         var result = [];
         var d = q.defer();
-        var SELECTOR = "//td[@role='rowheader']//span[contains(text(),'%s')]/../../../../td[@role='gridcell']//div[@role='option']";
         var func = function(permission){
-            return client.getTextFor(sprintf(SELECTOR, permission.email)).then(function(txt){
+            return client.getTextFor(sprintf(SEL.TODO, permission.email)).then(function(txt){
                 result.push({
                     email: permission.email, 
                     txtExpect: txt,
@@ -113,9 +115,8 @@ describe('googlesites-admin-automation tests', function(){
         return client.refresh().then(function(){
         return gAA.setActivePagePermisson().then(function(){
             return client.refresh().then(function(){
-                return client.actionFor(utils.SEL_PAGE_DISABLE, function(){
-                    return client.isVisible(utils.SEL_PAGE_DISABLE).then(function(isVisible){
-                        console.log(isVisible);
+                return client.actionFor(SEL.PAGE_DISABLE, function(){
+                    return client.isVisible(SEL.PAGE_DISABLE).then(function(isVisible){
                         expect(isVisible).to.equal(true);
                         client.call(done);
                     });
@@ -128,20 +129,18 @@ describe('googlesites-admin-automation tests', function(){
     it('ページレベルの権限を設定する',function(done){
         var result = [];
         var d = q.defer();
-        var SELECTOR = "//div[contains(@id,'descriptionContainer')]/span[contains(@id, 'description')]";
         var func = function(page){
             return client.url(page.pageURL).then(function(){
-            return client.clickFor("//span[@id='sites-share-visibility-btn']/div[@role='button']").then(function(){
-
-                return client.getTextFor(SELECTOR).then(function(txt){
+            return client.clickFor(SEL.BTN_SHARE).then(function(){
+                return client.getTextFor(SEL.PERMISSION_DESCRIPTION).then(function(txt){
                     result.push({url: page.pageURL, txt: txt});
                 });
             });
             });
         };
 
-        gAA.setPermissionPage(CONFIG.pages).then(function() {
-            async.forEachSeries(CONFIG.pages, function(permission, cb){
+        gAA.setPermissionPage(CONFIG.permissions).then(function() {
+            async.forEachSeries(CONFIG.permissions, function(permission, cb){
                 func(permission).then(function(){
                     cb();
                 });
@@ -182,7 +181,7 @@ describe('check other owner', function(){
             gAA.goSharingPermissions(CONFIG.siteURL).then(function(){
                 expect('Error message').to.equal('Error has not occurred');
             }).catch(function(err){
-                expect(err.message).to.equal('ログインしているユーザーはサイトのオーナーではありません。');
+                expect(err.message).to.equal(EMESSAGE.NOT_OWNER);
                 client.call(done);
             });
         });
@@ -208,7 +207,7 @@ describe('check site exist', function(){
             gAA.goSharingPermissions(CONFIG.siteURL + 'notExist/').then(function(){
                 expect('Error message').to.equal('Error has not occurred');
             }).catch(function(err){
-                expect(err.message).to.equal('指定されたサイトが存在しません');
+                expect(err.message).to.equal(EMESSAGE.PAGE_NOTFOUND);
                 client.call(done);
             });
         });
