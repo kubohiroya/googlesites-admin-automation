@@ -1,3 +1,5 @@
+module.exports.TIME_OUT_MS = 15 * 1000;
+
 module.exports.URL = {
   COMMON_SHARING: 'system/app/pages/admin/commonsharing'
 };
@@ -29,6 +31,7 @@ module.exports.SELECTOR = {
 	RADIO_INDEPENDENT: "//input[@id='permissions-ignores-radio']",
 	PERMISSION_SAVE: "//button[contains(text(), '保存')]",
 	PERMISSION_DESCRIPTION: "//div[contains(@id,'descriptionContainer')]/span[contains(@id, 'description')]",
+	MODAL: "//div[contains(@class, 'modal-dialog-bg')]",
 };
 
 module.exports.TITLE = {
