@@ -50,7 +50,7 @@ exports.config = {
     baseUrl: 'http://localhost',
     //
     // Default timeout for all waitForXXX commands.
-    waitforTimeout: 10000,
+    waitforTimeout: 99999999,
     //
     // Initialise the browser instance with a WebdriverIO plugin. The object should have the
     // plugin name as key and the desired plugin options as property. Make sure you have
