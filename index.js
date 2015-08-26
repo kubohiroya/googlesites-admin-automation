@@ -71,7 +71,10 @@ exec = function(client, params, action) {
       return d.reject();
     }
   };
-  action(client, params, next);
+  action(client, params, next)
+    .catch(function(err){
+      d.reject(err);
+    });
   return d.promise;
 };
 
@@ -141,6 +144,11 @@ module.exports.enterEmail = function (params) {
 module.exports.enterPass = function (params) {
   params.notNext = true;
   return exec(client, params, actions['googleAccount.enterPass']);
+};
+
+module.exports.goSharingPermissions = function (params) {
+  params.notNext = true;
+  return exec(client, params, actions['googleSite.goSharingPermissions']);
 };
 
 module.exports.init = function (clientArg) {

@@ -67,6 +67,33 @@ describe('googlesites-admin-automation test', function(){
     });
 });
 
+describe('check other owner test', function(){
+    var client;
+
+    before(function(done){
+       client = webdriverio.remote({ desiredCapabilities: {browserName: 'chrome'} });
+       gAA.init(client);
+       client.init(done);
+    });
+
+    it('オーナーが指定されたユーザではない場合にはエラーとなる', function(done){
+        var other = {owner: {email: 'hoge@hoge.com', password:'hogehoge'}};
+        gAA.enterEmail(other).then(function(){
+            gAA.enterPass(other).then(function(){
+                gAA.goSharingPermissions(CONFIG).then(function(result){
+                    expect('Error message').to.equal('Error has not occurred');
+                }).catch(function(err){
+                    expect(err.message).to.equal(EMESSAGE.NOT_OWNER);
+                    client.call(done);
+                });
+            });
+        });
+    });
+
+    after(function(done) {
+        client.end(done);
+    });
+});
 
 describe('googlesites-admin-automation Low-level API tests', function(){
     var client;
