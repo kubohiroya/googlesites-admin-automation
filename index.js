@@ -342,36 +342,153 @@ module.exports.init = function (clientArg) {
   init();
 };
 
+/**
+ *
+ * Googleサイトのページごとに権限を設定します
+ *
+ * <example>
+ *  var CONFIG = {
+ *      siteURL: 'https://sites.google.com/',
+ *      owner: {
+ *          email: 'hoge@hoge.com',
+ *          password:'hogehoge'
+ *      },
+ *      editors: [
+ *          'testuser04@hoge.com'
+ *      ],
+ *      viewers: [
+ *          'testuser03@hoge.com'
+ *      ],
+ *      permissions: [
+ *          {
+ *              pageURL: 'https://sites.google.com/page1',
+ *              editors: [
+ *                  'testuser02@hoge.com'
+ *              ],
+ *              viewers: [
+ *                  'testuser03@hoge.com'
+ *              ]
+ *          }
+ *      ]
+ *  }
+ *  var client = webdriverio.remote({ desiredCapabilities: {browserName: 'chrome'} });
+ *  gAA.setSitePermissions(client, CONFIG);
+ * </example>
+ *
+ * @param {Object} clientArg      webdriverio Object
+ * @param {Object} params         権限設定情報Object
+ *
+ * @return {Object}   promise Object
+ *
+ */
 module.exports.setSitePermissions = function (clientArg, params) {
   client = clientArg;
   return main(params, 'start');
 };
 
+/**
+ *
+ * GoogleアカウントでEmailを入力します
+ *
+ * <example>
+ *  gAA.enterEmail(CONFIG);
+ * </example>
+ *
+ * @param {Object} params         権限設定情報Object
+ *
+ * @return {Object}   promise Object
+ *
+ */
 module.exports.enterEmail = function (params) {
   params.notNext = true;
   return exec(client, params, actions['googleAccount.enterEmail']);
 };
 
+/**
+ *
+ * GoogleアカウントでPasswordを入力します
+ *
+ * <example>
+ *  gAA.enterPass(CONFIG);
+ * </example>
+ *
+ * @param {Object} params         権限設定情報Object
+ *
+ * @return {Object}   promise Object
+ *
+ */
 module.exports.enterPass = function (params) {
   params.notNext = true;
   return exec(client, params, actions['googleAccount.enterPass']);
 };
 
+/**
+ *
+ * Googleサイトの権限設定画面に遷移します
+ *
+ * <example>
+ *  gAA.goSharingPermissions(CONFIG);
+ * </example>
+ *
+ * @param {Object} params         権限設定情報Object
+ *
+ * @return {Object}   promise Object
+ *
+ */
 module.exports.goSharingPermissions = function (params) {
   params.notNext = true;
   return exec(client, params, actions['googleSite.goSharingPermissions']);
 };
 
+/**
+ *
+ * Googleサイトのサイトレベルでのユーザ毎権限を設定します
+ *
+ * <example>
+ *  gAA.setPermissionSite(CONFIG);
+ * </example>
+ *
+ * @param {Object} params         権限設定情報Object
+ *
+ * @return {Object}   promise Object
+ *
+ */
 module.exports.setPermissionSite = function (params) {
   params.notNext = true;
   return exec(client, params, actions['googleSite.setPermissionSite']);
 };
 
+/**
+ *
+ * Googleサイトのページレベルのユーザ毎権限を有効化します
+ *
+ * <example>
+ *  gAA.setEnablePagePermisson(CONFIG);
+ * </example>
+ *
+ * @param {Object} params         権限設定情報Object
+ *
+ * @return {Object}   promise Object
+ *
+ */
 module.exports.setEnablePagePermisson = function (params) {
   params.notNext = true;
   return exec(client, params, actions['googleSite.setEnablePagePermisson']);
 };
 
+/**
+ *
+ * Googleサイトのページごとに権限を設定します
+ *
+ * <example>
+ *  gAA.setPermissionPage(CONFIG);
+ * </example>
+ *
+ * @param {Object} params         権限設定情報Object
+ *
+ * @return {Object}   promise Object
+ *
+ */
 module.exports.setPermissionPage = function (params) {
   params.notNext = true;
   return exec(client, params, actions['googleSite.setPermissionPage']);
