@@ -60,24 +60,6 @@ actions = {
         return d.promise;
       };
 
-      var clearSuggest = function(){
-        var d = q.defer();
-        client.clickFor(SEL.INVITE_EMAIL).then(function(){
-          var selector = sprintf(SEL.INVITE_EMAIL_SUGGEST, permission.email);
-          return client.isVisible(selector).then(function(isVisible) {
-            if(isVisible){
-              console.log('clearSuggest: ' + selector);
-              return client.clickFor(selector).then(function(){
-                return d.resolve();
-              });
-            }else{
-              return d.resolve();
-            }
-          });
-        });
-        return d.promise;
-      };
-
       var selectPermission = function(){
         var d = q.defer();
         //リストボックスを選択
@@ -93,9 +75,11 @@ actions = {
 
       var clickSendNotice = function(){
         var d = q.defer();
+        client.clickFor(SEL.INVITE_EMAIL).then(function(){
         //メールで通知をOFF
-        client.clickFor(SEL.SEND_NOTICE).then(function(){
-          return d.resolve();
+          return client.clickFor(SEL.SEND_NOTICE).then(function(){
+            return d.resolve();
+          });
         });
         return d.promise;
       };
@@ -116,10 +100,9 @@ actions = {
       };
 
       return q.when()
+        .then(clickSendNotice)
         .then(enterEmail)
         .then(selectPermission)
-        .then(clearSuggest)
-        .then(clickSendNotice)
         .then(registUser)
         ;
     }
@@ -147,20 +130,18 @@ actions = {
         });
       });
     }
-// return client.getHTML("//div[@id='sites-page-toolbar']//div[@id='sites-admin-share-buttons-wrapper']", true).then(function(){
-//   console.log(html);
-// });
-return client.refresh().then(function(){
-    return client.isVisible(SEL.PAGE_ENABLE).then(function(isVisible){
-      if(isVisible){
-        return enablePagePermission();
-      }else{
-        console.log("alredy enabled.");
-      }
-    }).then(function(){
-      return next('googleSite.setPermissionPage');
+
+    return client.refresh().then(function(){
+      return client.isVisible(SEL.PAGE_ENABLE).then(function(isVisible){
+        if(isVisible){
+          return enablePagePermission();
+        }else{
+          console.log("alredy enabled.");
+        }
+      }).then(function(){
+        return next('googleSite.setPermissionPage');
+      });
     });
-});
   },
 
   'googleSite.setPermissionPage': function(client, params, next) {
@@ -244,14 +225,6 @@ return client.refresh().then(function(){
       var savePermission = function(){
         var d = q.defer();
         client.clickFor(SEL.PERMISSION_SAVE).then(function(){
-          // return client.waitUntil(function(){
-          //   client.isExisting('selector').then(function(isExisting) {
-          //   })
-          //   return client.isVisible(SEL.MODAL).then(function(isVisible){
-          //     return !isVisible;
-          //   });
-          // }).then(function(){
-            // return client.actionFor(SEL.PERMISSION_DESCRIPTION, function(){}).then(function(){
             //TODO:モーダルウィンドウが前面に表示されていてクリックできない（SEL.DELETE_SELECT）場合がある問題の暫定的な対応
             return client.pause(TOUT_MS / 2).then(function() {
               return d.resolve();
@@ -270,8 +243,7 @@ return client.refresh().then(function(){
     }
 
     var d = q.defer();
-//    return utils.scopeIframe(client, SEL.IFRAME_SHARE_SETTING).then(function(){
-  return client.pause(3*1000).then(function(){
+    return client.then(function(){
       async.forEachSeries(params.permissions, function(permission, cb){
         setPermissionPageEach(permission).then(function(){
           var permissionList = {editors: permission.editors, viewers:permission.viewers};
@@ -365,13 +337,15 @@ main = function(params, startActionName) {
   });
 };
 
+module.exports.init = function (clientArg) {
+  client = clientArg;
+  init();
+};
+
 module.exports.setSitePermissions = function (clientArg, params) {
   client = clientArg;
   return main(params, 'start');
 };
-
-
-
 
 module.exports.enterEmail = function (params) {
   params.notNext = true;
@@ -401,11 +375,6 @@ module.exports.setEnablePagePermisson = function (params) {
 module.exports.setPermissionPage = function (params) {
   params.notNext = true;
   return exec(client, params, actions['googleSite.setPermissionPage']);
-};
-
-module.exports.init = function (clientArg) {
-  client = clientArg;
-  init();
 };
 
 // module.exports.enterEmail = function (params) {

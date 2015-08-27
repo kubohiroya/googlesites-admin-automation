@@ -141,13 +141,12 @@ describe('googlesites-admin-automation Low-level API tests', function(){
         });
     });
 
-
-    // it('ページレベルの権限を設定する',function(done) {
-    //     gAA.setPermissionPage(CONFIG).then(function(result){
-    //         expect(result).to.equal('end');
-    //         client.call(done);
-    //     });
-    // });
+    it('ページレベルの権限を設定する',function(done) {
+        gAA.setPermissionPage(CONFIG).then(function(result){
+            expect(result).to.equal('end');
+            client.call(done);
+        });
+    });
 
     after(function(done) {
         client.end(done);
