@@ -48,6 +48,7 @@ var CONFIG = {
 }
 
 describe('googlesites-admin-automation test', function(){
+    this.timeout(99999999);
     var client;
 
     before(function(done){
@@ -96,6 +97,7 @@ describe('check other owner test', function(){
 });
 
 describe('googlesites-admin-automation Low-level API tests', function(){
+    this.timeout(99999999);
     var client;
 
     before(function(done){
@@ -117,6 +119,35 @@ describe('googlesites-admin-automation Low-level API tests', function(){
             client.call(done);
         });
     });
+
+    it('Googleサイトの権限設定画面に遷移する',function(done) {
+        gAA.goSharingPermissions(CONFIG).then(function(result){
+            expect(result).to.equal('googleSite.setPermissionSite');
+            client.call(done);
+        });
+    });
+
+    it('サイトレベルでのユーザ毎権限を設定する',function(done) {
+        gAA.setPermissionSite(CONFIG).then(function(result){
+            expect(result).to.equal('googleSite.setEnablePagePermisson');
+            client.call(done);
+        });
+    });
+
+    it('ページレベルのユーザ毎権限を有効化する',function(done) {
+        gAA.setEnablePagePermisson(CONFIG).then(function(result){
+            expect(result).to.equal('googleSite.setPermissionPage');
+            client.call(done);
+        });
+    });
+
+
+    // it('ページレベルの権限を設定する',function(done) {
+    //     gAA.setPermissionPage(CONFIG).then(function(result){
+    //         expect(result).to.equal('end');
+    //         client.call(done);
+    //     });
+    // });
 
     after(function(done) {
         client.end(done);
