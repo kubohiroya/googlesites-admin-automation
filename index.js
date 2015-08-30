@@ -9,7 +9,7 @@ var TITLE = DF.TITLE;
 var EMESSAGE = DF.EMESSAGE;
 var TOUT_MS = DF.TIME_OUT_MS;
 
-var actions, client, exec, init, main, options, q, webdriverio;
+var actions, client, exec, init, main, webdriverio, process, result = {};
 
 actions = {
   'start': function(client, params, next) {
@@ -45,9 +45,27 @@ actions = {
               || txt.indexOf(TITLE.PAGE_NOTFOUND_CHROME)　!== -1){
           throw new Error(EMESSAGE.PAGE_NOTFOUND);
         }
-        return next('googleSite.setPermissionSite');
+        if(process === 'getSitePermissions'){
+          return next('googleSite.getPermissionSite');
+        }else{
+          return next('googleSite.setPermissionSite');
+        }
       });
     });
+  },
+
+  'googleSite.getPermissionSite': function(client, params, next) {
+    result.hoge = 'googleSite.getPermissionSite';
+    //TODO: edit result object
+    next('googleSite.getPermissionPage');
+    return client;
+  },
+
+  'googleSite.getPermissionPage': function(client, params, next) {
+    result.fuga = 'googleSite.getPermissionPage';
+    //TODO: edit result object
+    next('end');
+    return client;
   },
 
   'googleSite.setPermissionSite': function(client, params, next) {
@@ -269,17 +287,19 @@ exec = function(client, params, action) {
       return d.resolve(nextActionName);
     }
     if (nextActionName === 'end') {
+      console.log('end');
       return d.resolve();
     } else if (actions[nextActionName]) {
       console.log('action:', nextActionName);
       return exec(client, params, actions[nextActionName]).then(function() {
-        return d.resolve();
+        return d.resolve(result);
       });
     } else {
       console.log('unknown action name', nextActionName);
       return d.reject();
     }
   };
+
   action(client, params, next)
     .catch(function(err){
       d.reject(err);
@@ -288,6 +308,7 @@ exec = function(client, params, action) {
 };
 
 init = function(){
+  result = {};
   client.actionFor = function(selector, action) {
     return client.waitForExist(selector, TOUT_MS).then(function() {
       return client.waitForVisible(selector, TOUT_MS).then(function() {
@@ -332,9 +353,7 @@ init = function(){
 
 main = function(params, startActionName) {
   init();
-  return exec(client, params, actions[startActionName]).then(function() {
-    return console.log('done');
-  });
+  return exec(client, params, actions[startActionName]);
 };
 
 module.exports.init = function (clientArg) {
@@ -383,6 +402,13 @@ module.exports.init = function (clientArg) {
  */
 module.exports.setSitePermissions = function (clientArg, params) {
   client = clientArg;
+  process = 'setSitePermissions';
+  return main(params, 'start');
+};
+
+module.exports.getSitePermissions = function (clientArg, params) {
+  client = clientArg;
+  process = 'getSitePermissions';
   return main(params, 'start');
 };
 

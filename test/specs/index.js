@@ -47,6 +47,30 @@ var CONFIG = {
     ]
 }
 
+describe('getSitePermissions作成中', function(){
+    this.timeout(99999999);
+    var client;
+
+    before(function(done){
+       client = webdriverio.remote({ desiredCapabilities: {browserName: 'chrome'} });
+       client.init(done);
+    });
+
+    it('ページごとの権限が設定できる',function(done) {
+        gAA.getSitePermissions(client, CONFIG).then(function(result){
+console.log('getSitePermissions() finished');
+console.log(result);
+            client.call(done);
+        // }).catch(function(err){
+        //     console.log(err);
+        });
+    });
+
+    after(function(done) {
+        client.end(done);
+    });
+});
+
 describe('googlesites-admin-automation test', function(){
     this.timeout(99999999);
     var client;
@@ -58,7 +82,9 @@ describe('googlesites-admin-automation test', function(){
 
     it('ページごとの権限が設定できる',function(done) {
         //TODO:検証内容
-        gAA.setSitePermissions(client, CONFIG).then(function(){
+        gAA.setSitePermissions(client, CONFIG).then(function(result){
+console.log('setSitePermissions() finished');
+console.log(result);
             client.call(done);
         });
     });
