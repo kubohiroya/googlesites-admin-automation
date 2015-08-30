@@ -57,8 +57,13 @@ actions = {
   'googleSite.getPermissionSite': function(client, params, next) {
     result.hoge = 'googleSite.getPermissionSite';
     //TODO: edit result object
-    next('googleSite.getPermissionPage');
-    return client;
+    return utils.scopeIframe(client, SEL.IFRAME_SHARE_SETTING).then(function(){
+      return client.getTextFor(SEL.REGISTERD_ALL_USERS).then(function(registeredUsers){
+        return client.getTextFor(SEL.REGISTERD_PERMISSIONS).then(function(registeredPermissions){
+          return next('googleSite.getPermissionPage');
+        });
+      });
+    });
   },
 
   'googleSite.getPermissionPage': function(client, params, next) {
@@ -191,7 +196,7 @@ actions = {
       };
 
       return utils.scopeIframe(client, SEL.IFRAME_SHARE_SETTING).then(function(){
-        return client.getTextFor(SEL.REGISTERD_USERS).then(function(registeredUsers){
+        return client.getTextFor(SEL.REGISTERD_ENABLED_USERS).then(function(registeredUsers){
           var users = utils.getNoNeedUsers(registeredUsers, needUsers);
           if(users.length === 0){
             console.log('User to be deleted does not exist.');

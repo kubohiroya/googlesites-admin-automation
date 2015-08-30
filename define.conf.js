@@ -20,7 +20,9 @@ module.exports.SELECTOR = {
 	PAGE_DISABLE: "//div[@id='sites-page-toolbar']//div[@id='sites-admin-share-buttons-wrapper']/div[@id='sites-admin-share-disable-plp']",
 	PAGE_ENABLE_CONFIRM: "//div[contains(@class, 'sites-admin-share-dialog-buttons')]/button[@name='ok']",
 
-	REGISTERD_USERS: "//div[@role='button' and contains(@aria-label, 'さんを削除') and not(contains(@style, 'display: none'))]/ancestor::tr/td[@role='rowheader']/div/span[2]/span[2]",
+	REGISTERD_ENABLED_USERS: "//div[@role='button' and contains(@aria-label, 'さんを削除') and not(contains(@style, 'display: none'))]/ancestor::tr/td[@role='rowheader']/div/span[2]/span[2]",
+	REGISTERD_ALL_USERS: "//tbody[@class='permissions-list-standard-contents']//td[@role='rowheader']//span[@class='apc-email-contents']",
+	REGISTERD_PERMISSIONS: "//tbody[@class='permissions-list-standard-contents']//td[@class='apc-role']//div[@role='option']",
 	DELETE_SELECT: "//td[@role='rowheader']/div/span[2]/span[text()='%s']/ancestor::tr//div[@role='button' and contains(@aria-label, 'さんを削除') and not(contains(@style, 'display: none'))]",
 	DELETE_SAVE: "//div[@role='button' and text()='変更を保存']",
 	DELETE_ALERT: "//div[@role='alert']/div[text()='保存が必要な変更を加えました。']",
