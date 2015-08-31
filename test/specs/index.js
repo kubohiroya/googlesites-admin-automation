@@ -5,6 +5,7 @@ var chai        = require('chai'),
     webdriverio = require('webdriverio'),
     q           = require('q'),
     sprintf     = require('util').format,
+    ACCOUNT     = require('../.test.conf').ACCOUNT,
     utils       = require('../../lib/utils'),
     SEL         = require('../../define.conf').SELECTOR;
     TITLE       = require('../../define.conf').TITLE;
@@ -14,10 +15,7 @@ var chai        = require('chai'),
 
 var CONFIG = {
   siteURL: 'https://sites.google.com/a/cuc.global/dev-y41i3303-01/',
-  owner: {
-    email: 'hoge@hoge.com',
-    password:'hogehoge'
-  },
+  owner: ACCOUNT.owner,
   editors: [
     'testuser02@cuc.global',
     'testuser04@cuc.global'
@@ -87,7 +85,7 @@ describe('check other owner test', function(){
   });
 
   it('オーナーが指定されたユーザではない場合にはエラーとなる', function(done){
-    var other = {owner: {email: 'hoge@hoge.com', password:'hogehoge'}};
+    var other = {owner: ACCOUNT.other};
     gAA.enterEmail(other).then(function(){
       gAA.enterPass(other).then(function(){
         gAA.goSharingPermissions(CONFIG).then(function(result){
@@ -118,7 +116,7 @@ describe('check site exist', function(){
   it('指定されたサイトが存在しない場合にはエラーとなる', function(done){
     var other = {
       siteURL: 'https://sites.google.com/a/cuc.global/dev-y41i3303-01/' + 'notExist/',
-      owner: {email: 'hoge@hoge.com', password:'hogehoge'}
+      owner: ACCOUNT.owner
     };
     gAA.enterEmail(other).then(function(){
       gAA.enterPass(other).then(function(){
@@ -135,7 +133,7 @@ describe('check site exist', function(){
   it('指定されたページが存在しない場合にはエラーとなる', function(done){
     var other = {
       siteURL: 'https://sites.google.com/a/cuc.global/dev-y41i3303-01/',
-      owner: {email: 'hoge@hoge.com', password:'hogehoge'},
+      owner: ACCOUNT.owner,
       permissions: [
         {
           pageURL: 'https://sites.google.com/a/cuc.global/dev-y41i3303-01/page1' + 'notExist/',
