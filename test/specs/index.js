@@ -125,6 +125,28 @@ describe('check site exist', function(){
                 gAA.goSharingPermissions(other).then(function(result){
                     expect('Error message').to.equal('Error has not occurred');
                 }).catch(function(err){
+                    expect(err.message).to.equal(EMESSAGE.SITE_NOTFOUND);
+                    client.call(done);
+                });
+            });
+        });
+    });
+
+    it('指定されたページが存在しない場合にはエラーとなる', function(done){
+        var other = {
+            siteURL: 'https://sites.google.com/a/cuc.global/dev-y41i3303-01/',
+            owner: {email: 'testuser00@cuc.global', password:'Y>y4soU8'},
+            permissions: [
+                {
+                    pageURL: 'https://sites.google.com/a/cuc.global/dev-y41i3303-01/page1' + 'notExist/',
+                }
+            ]
+        };
+        gAA.enterEmail(other).then(function(){
+            gAA.enterPass(other).then(function(){
+                gAA.setPermissionPage(other).then(function(result){
+                    expect('Error message').to.equal('Error has not occurred');
+                }).catch(function(err){
                     expect(err.message).to.equal(EMESSAGE.PAGE_NOTFOUND);
                     client.call(done);
                 });

@@ -45,5 +45,6 @@ module.exports.TITLE = {
 
 module.exports.EMESSAGE = {
   NOT_OWNER: 'ログインしているユーザーはサイトのオーナーではありません。',
-  PAGE_NOTFOUND: '指定されたサイトが存在しません'
+  SITE_NOTFOUND: '指定されたサイトが存在しません。',
+  PAGE_NOTFOUND: '指定されたページが存在しません。'
 };

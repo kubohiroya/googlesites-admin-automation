@@ -49,8 +49,8 @@ actions = {
         if(txt.indexOf(TITLE.NOT_OWNER) !== -1){
           throw new Error(EMESSAGE.NOT_OWNER);
         }else if(txt.indexOf(TITLE.PAGE_NOTFOUND_FIREFOX) !== -1
-              || txt.indexOf(TITLE.PAGE_NOTFOUND_CHROME)　!== -1){
-          throw new Error(EMESSAGE.PAGE_NOTFOUND);
+              || txt.indexOf(TITLE.PAGE_NOTFOUND_CHROME) !== -1){
+          throw new Error(EMESSAGE.SITE_NOTFOUND);
         }
         if(process === 'getSitePermissions'){
           return next('googleSite.getPermissionSite');
@@ -262,8 +262,16 @@ actions = {
       var goPageSharingPermissions = function(){
         var d = q.defer();
         client.url(permission.pageURL).then(function(){
-          return client.clickFor(SEL.BTN_SHARE).then(function(){
-            return d.resolve();
+          return client.getTitle().then(function(txt){
+            if(txt.indexOf(TITLE.NOT_OWNER) !== -1){
+              throw new Error(EMESSAGE.NOT_OWNER);
+            }else if(txt.indexOf(TITLE.PAGE_NOTFOUND_FIREFOX) !== -1
+                  || txt.indexOf(TITLE.PAGE_NOTFOUND_CHROME) !== -1){
+              return d.reject(new Error(EMESSAGE.PAGE_NOTFOUND));
+            }
+            return client.clickFor(SEL.BTN_SHARE).then(function(){
+              return d.resolve();
+            });
           });
         });
         return d.promise;
@@ -321,6 +329,8 @@ actions = {
           deleteNoNeedUser(utils.editPermissionList(permission)).then(function(){
             cb();
           });
+        }).catch(function(err){
+          d.reject(err);
         });
        }, function() {
          d.resolve();
