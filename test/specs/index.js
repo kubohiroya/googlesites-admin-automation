@@ -47,45 +47,27 @@ var CONFIG = {
     ]
 }
 
-describe('getSitePermissions作成中', function(){
-    this.timeout(99999999);
-    var client;
-
-    before(function(done){
-       client = webdriverio.remote({ desiredCapabilities: {browserName: 'chrome'} });
-       client.init(done);
-    });
-
-    it('ページごとの権限が設定できる',function(done) {
-        gAA.getSitePermissions(client, CONFIG).then(function(result){
-console.log('getSitePermissions() finished');
-console.log(result);
-            client.call(done);
-        // }).catch(function(err){
-        //     console.log(err);
-        });
-    });
-
-    after(function(done) {
-        client.end(done);
-    });
-});
-
 describe('googlesites-admin-automation test', function(){
     this.timeout(99999999);
     var client;
 
     before(function(done){
-       client = webdriverio.remote({ desiredCapabilities: {browserName: 'chrome'} });
-       client.init(done);
+        client = webdriverio.remote({ desiredCapabilities: {browserName: 'chrome'} });
+        client.init(done);
     });
 
-    it('ページごとの権限が設定できる',function(done) {
-        //TODO:検証内容
-        gAA.setSitePermissions(client, CONFIG).then(function(result){
-console.log('setSitePermissions() finished');
-console.log(result);
-            client.call(done);
+    it('ページごとの権限が取得できる',function(done) {
+        gAA.setSitePermissions(client, CONFIG).then(function(){
+            gAA.getSitePermissions(client, CONFIG).then(function(result){
+                assert.deepEqual(CONFIG.viewers.sort(), result.viewers.sort());
+                assert.deepEqual(CONFIG.editors.sort(), result.editors.sort());
+                CONFIG.permissions.forEach(function(permission, index){
+                    assert.strictEqual(permission.pageURL, result.permissions[index].pageURL);
+                    assert.deepEqual(permission.viewers.sort(), result.permissions[index].viewers.sort());
+                    assert.deepEqual(permission.editors.sort(), result.permissions[index].editors.sort());
+                });
+                client.call(done);
+            });
         });
     });
 
@@ -95,6 +77,7 @@ console.log(result);
 });
 
 describe('check other owner test', function(){
+   this.timeout(99999999);
     var client;
 
     before(function(done){

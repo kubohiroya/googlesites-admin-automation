@@ -47,4 +47,20 @@ describe('utils tests', function(){
         var target = utils.getNoNeedUsers('user02', []);
         assert.deepEqual(['user02'], target);
     });
+
+    it('editPermissionObj()',function() {
+        var srcUsers = [ 'user03', 'user04', 'user02' ];
+        var srcPermissions = [ '閲覧者', '編集者', '編集者' ];
+        var dest = {editors: ['user04', 'user02'], viewers: ['user03']};
+
+        var target = utils.editPermissionObj(srcUsers, srcPermissions);
+
+        assert.deepEqual(target, dest);
+    });
 });
+
+
+
+
+
+

@@ -18,11 +18,18 @@ actions = {
 
   'googleAccount.enterEmail': function(client, params, next) {
     return client.url('https://accounts.google.com/ServiceLogin?sacu=1').then(function(){
-      return client.setValueFor('#Email', params.owner.email).then(function() {
-        return client.clickFor('#next').then(function() {
+      return client.isExisting('#Passwd').then(function(isExisting) {
+        //ログイン中にパスワードを再入力する場合
+        if(isExisting){
           return next('googleAccount.enterPass');
-        });
-      });
+        }else{
+          return client.setValueFor('#Email', params.owner.email).then(function() {
+            return client.clickFor('#next').then(function() {
+              return next('googleAccount.enterPass');
+            });
+          });
+        }
+      })
     });
   },
 
@@ -55,11 +62,10 @@ actions = {
   },
 
   'googleSite.getPermissionSite': function(client, params, next) {
-    result.hoge = 'googleSite.getPermissionSite';
-    //TODO: edit result object
-    return utils.scopeIframe(client, SEL.IFRAME_SHARE_SETTING).then(function(){
+    return utils.scopeIframe(client, SEL.IFRAME_SHARE_SETTING, TOUT_MS).then(function(){
       return client.getTextFor(SEL.REGISTERD_ALL_USERS).then(function(registeredUsers){
         return client.getTextFor(SEL.REGISTERD_PERMISSIONS).then(function(registeredPermissions){
+          result = utils.editPermissionObj(registeredUsers, registeredPermissions);
           return next('googleSite.getPermissionPage');
         });
       });
@@ -67,10 +73,52 @@ actions = {
   },
 
   'googleSite.getPermissionPage': function(client, params, next) {
-    result.fuga = 'googleSite.getPermissionPage';
-    //TODO: edit result object
-    next('end');
-    return client;
+    function getPermissionPageEach(permission){
+      var goPageSharingPermissions = function(){
+        var d = q.defer();
+        client.url(permission.pageURL).then(function(){
+          return client.clickFor(SEL.BTN_SHARE).then(function(){
+            return d.resolve();
+          });
+        });
+        return d.promise;
+      };
+
+      var getPermissions = function(){
+        var d = q.defer();
+        return utils.scopeIframe(client, SEL.IFRAME_SHARE_SETTING, TOUT_MS).then(function(){
+          return client.getTextFor(SEL.REGISTERD_ALL_USERS).then(function(registeredUsers){
+            return client.getTextFor(SEL.REGISTERD_PERMISSIONS).then(function(registeredPermissions){
+              var obj = utils.editPermissionObj(registeredUsers, registeredPermissions);
+              obj.pageURL = permission.pageURL;
+              result.permissions.push(obj);
+              return d.resolve();
+            });
+          });
+        });
+        return d.promise;
+      };
+
+      return q.when()
+        .then(goPageSharingPermissions)
+        .then(getPermissions)
+      ;
+    }
+
+    result.permissions = [];
+    var d = q.defer();
+    return client.then(function(){
+      async.forEachSeries(params.permissions, function(permission, cb){
+        getPermissionPageEach(permission).then(function(){
+          cb();
+        });
+       }, function() {
+         d.resolve();
+      });
+      return d.promise;
+    }).then(function(){
+       return next('end');
+    });
   },
 
   'googleSite.setPermissionSite': function(client, params, next) {
@@ -131,7 +179,7 @@ actions = {
     }
 
     var d = q.defer();
-    return utils.scopeIframe(client, SEL.IFRAME_SHARE_SETTING).then(function(){
+    return utils.scopeIframe(client, SEL.IFRAME_SHARE_SETTING, TOUT_MS).then(function(){
       async.forEachSeries(utils.editPermissionList(params), function(permission, cb){
         setPermissionSiteEach(permission).then(function(){
           cb();
@@ -195,7 +243,7 @@ actions = {
         return d.promise;
       };
 
-      return utils.scopeIframe(client, SEL.IFRAME_SHARE_SETTING).then(function(){
+      return utils.scopeIframe(client, SEL.IFRAME_SHARE_SETTING, TOUT_MS).then(function(){
         return client.getTextFor(SEL.REGISTERD_ENABLED_USERS).then(function(registeredUsers){
           var users = utils.getNoNeedUsers(registeredUsers, needUsers);
           if(users.length === 0){
@@ -293,6 +341,7 @@ exec = function(client, params, action) {
     }
     if (nextActionName === 'end') {
       console.log('end');
+      process = void 0;
       return d.resolve();
     } else if (actions[nextActionName]) {
       console.log('action:', nextActionName);
@@ -301,12 +350,14 @@ exec = function(client, params, action) {
       });
     } else {
       console.log('unknown action name', nextActionName);
+      process = void 0;
       return d.reject();
     }
   };
 
   action(client, params, next)
     .catch(function(err){
+      process = void 0;
       d.reject(err);
     });
   return d.promise;
@@ -368,7 +419,8 @@ module.exports.init = function (clientArg) {
 
 /**
  *
- * Googleサイトのページごとに権限を設定します
+ * Googleサイトの権限を設定します
+ *　ページごとの権限も含まれます
  *
  * <example>
  *  var CONFIG = {
@@ -411,6 +463,24 @@ module.exports.setSitePermissions = function (clientArg, params) {
   return main(params, 'start');
 };
 
+/**
+ *
+ * Googleサイトに設定された権限を取得します
+ *　ページごとの権限も含まれます
+ *
+ * <example>
+ *  var client = webdriverio.remote({ desiredCapabilities: {browserName: 'chrome'} });
+ *  gAA.getSitePermissions(client, CONFIG).then(function(result){
+ *    console.log(result);
+ * });
+ * </example>
+ *
+ * @param {Object} clientArg      webdriverio Object
+ * @param {Object} params         権限設定情報Object
+ *
+ * @return {Object}   promise Object
+ *
+ */
 module.exports.getSitePermissions = function (clientArg, params) {
   client = clientArg;
   process = 'getSitePermissions';
