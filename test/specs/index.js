@@ -105,6 +105,38 @@ describe('check other owner test', function(){
     });
 });
 
+describe('check site exist', function(){
+   this.timeout(99999999);
+    var client;
+
+    before(function(done){
+       client = webdriverio.remote({ desiredCapabilities: {browserName: 'chrome'} });
+       gAA.init(client);
+       client.init(done);
+    });
+
+    it('指定されたサイトが存在しない場合にはエラーとなる', function(done){
+        var other = {
+            siteURL: 'https://sites.google.com/a/cuc.global/dev-y41i3303-01/' + 'notExist/',
+            owner: {email: 'hoge@hoge.com', password:'hogehoge'}
+        };
+        gAA.enterEmail(other).then(function(){
+            gAA.enterPass(other).then(function(){
+                gAA.goSharingPermissions(other).then(function(result){
+                    expect('Error message').to.equal('Error has not occurred');
+                }).catch(function(err){
+                    expect(err.message).to.equal(EMESSAGE.PAGE_NOTFOUND);
+                    client.call(done);
+                });
+            });
+        });
+    });
+
+    after(function(done) {
+        client.end(done);
+    });
+});
+
 describe('googlesites-admin-automation Low-level API tests', function(){
     this.timeout(99999999);
     var client;
