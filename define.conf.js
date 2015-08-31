@@ -1,10 +1,15 @@
 module.exports.TIME_OUT_MS = 15 * 1000;
 
 module.exports.URL = {
-  COMMON_SHARING: 'system/app/pages/admin/commonsharing'
+	ACCOUNT_LOGIN :'https://accounts.google.com/ServiceLogin?sacu=1',
+	COMMON_SHARING: 'system/app/pages/admin/commonsharing'
 };
 
 module.exports.SELECTOR = {
+	ACCOUNT_EMAIL: '#Email',
+	ACCOUNT_NEXT: '#next',
+	ACCOUNT_PASS: '#Passwd',
+	ACCOUNT_SIGNIN: '#signIn',
 	LOGINED: "//a[contains(@title, '%s')]",
 
 	INVITE_EMAIL: "//td[@id=':p.inviter']//textarea",
@@ -37,14 +42,14 @@ module.exports.SELECTOR = {
 };
 
 module.exports.TITLE = {
-  COMMON_SHARING: '共有と権限',
-  NOT_OWNER: '権限がありません',
-  PAGE_NOTFOUND_FIREFOX: 'ページが見つかりませんでした',
-  PAGE_NOTFOUND_CHROME: 'Forbidden'
+	COMMON_SHARING: '共有と権限',
+	NOT_OWNER: '権限がありません',
+	PAGE_NOTFOUND_FIREFOX: 'ページが見つかりませんでした',
+	PAGE_NOTFOUND_CHROME: 'Forbidden'
 };
 
 module.exports.EMESSAGE = {
-  NOT_OWNER: 'ログインしているユーザーはサイトのオーナーではありません。',
-  SITE_NOTFOUND: '指定されたサイトが存在しません。',
-  PAGE_NOTFOUND: '指定されたページが存在しません。'
+	NOT_OWNER: 'ログインしているユーザーはサイトのオーナーではありません。',
+	SITE_NOTFOUND: '指定されたサイトが存在しません。',
+	PAGE_NOTFOUND: '指定されたページが存在しません。'
 };

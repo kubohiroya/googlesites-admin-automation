@@ -17,14 +17,14 @@ actions = {
   },
 
   'googleAccount.enterEmail': function(client, params, next) {
-    return client.url('https://accounts.google.com/ServiceLogin?sacu=1').then(function(){
-      return client.isExisting('#Passwd').then(function(isExisting) {
+    return client.url(URL.ACCOUNT_LOGIN).then(function(){
+      return client.isExisting(SEL.ACCOUNT_PASS).then(function(isExisting) {
         //ログイン中にパスワードを再入力する場合
         if(isExisting){
           return next('googleAccount.enterPass');
         }else{
-          return client.setValueFor('#Email', params.owner.email).then(function() {
-            return client.clickFor('#next').then(function() {
+          return client.setValueFor(SEL.ACCOUNT_EMAIL, params.owner.email).then(function() {
+            return client.clickFor(SEL.ACCOUNT_NEXT).then(function() {
               return next('googleAccount.enterPass');
             });
           });
@@ -34,9 +34,9 @@ actions = {
   },
 
   'googleAccount.enterPass': function(client, params, next) {
-    return client.setValueFor('#Passwd', params.owner.password).then(function() {
-      return client.clickFor('#signIn').then(function() {
-        return client.waitForExist("//a[contains(@title, '" + params.owner.email + "')]", TOUT_MS).then(function(){
+    return client.setValueFor(SEL.ACCOUNT_PASS, params.owner.password).then(function() {
+      return client.clickFor(SEL.ACCOUNT_SIGNIN).then(function() {
+        return client.waitForExist(sprintf(SEL.LOGINED, params.owner.email), TOUT_MS).then(function(){
           return next('googleSite.goSharingPermissions');
         });
       });
