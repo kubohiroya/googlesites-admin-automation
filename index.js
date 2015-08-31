@@ -604,13 +604,3 @@ module.exports.setPermissionPage = function (params) {
   params.notNext = true;
   return exec(client, params, actions['googleSite.setPermissionPage']);
 };
-
-// module.exports.enterEmail = function (params) {
-//   var d, next;
-//   d = q.defer();
-//   var action = actions['googleAccount.enterEmail'];
-//   action(client, params, function(nextActionName){
-//     return d.resolve(nextActionName);
-//   });
-//   return d.promise;
-// };
