@@ -80,15 +80,14 @@ describe('check other owner test', function(){
 
   before(function(done){
    client = webdriverio.remote({ desiredCapabilities: {browserName: 'chrome'} });
-   gAA.init(client);
    client.init(done);
   });
 
   it('オーナーが指定されたユーザではない場合にはエラーとなる', function(done){
     var other = {owner: ACCOUNT.other};
-    gAA.enterEmail(other).then(function(){
-      gAA.enterPass(other).then(function(){
-        gAA.goSharingPermissions(CONFIG).then(function(result){
+    gAA.enterEmail(client, other).then(function(){
+      gAA.enterPass(client, other).then(function(){
+        gAA.goSharingPermissions(client, CONFIG).then(function(result){
           expect('Error message').to.equal('Error has not occurred');
         }).catch(function(err){
           expect(err.message).to.equal(EMESSAGE.NOT_OWNER);
@@ -109,7 +108,6 @@ describe('check site exist', function(){
 
   before(function(done){
    client = webdriverio.remote({ desiredCapabilities: {browserName: 'chrome'} });
-   gAA.init(client);
    client.init(done);
   });
 
@@ -118,9 +116,9 @@ describe('check site exist', function(){
       siteURL: 'https://sites.google.com/a/cuc.global/dev-y41i3303-01/' + 'notExist/',
       owner: ACCOUNT.owner
     };
-    gAA.enterEmail(other).then(function(){
-      gAA.enterPass(other).then(function(){
-        gAA.goSharingPermissions(other).then(function(result){
+    gAA.enterEmail(client, other).then(function(){
+      gAA.enterPass(client, other).then(function(){
+        gAA.goSharingPermissions(client, other).then(function(result){
           expect('Error message').to.equal('Error has not occurred');
         }).catch(function(err){
           expect(err.message).to.equal(EMESSAGE.SITE_NOTFOUND);
@@ -140,9 +138,9 @@ describe('check site exist', function(){
         }
       ]
     };
-    gAA.enterEmail(other).then(function(){
-      gAA.enterPass(other).then(function(){
-        gAA.setPermissionPage(other).then(function(result){
+    gAA.enterEmail(client, other).then(function(){
+      gAA.enterPass(client, other).then(function(){
+        gAA.setPermissionPage(client, other).then(function(result){
           expect('Error message').to.equal('Error has not occurred');
         }).catch(function(err){
           expect(err.message).to.equal(EMESSAGE.PAGE_NOTFOUND);
@@ -163,49 +161,22 @@ describe('googlesites-admin-automation Low-level API tests', function(){
 
   before(function(done){
    client = webdriverio.remote({ desiredCapabilities: {browserName: 'chrome'} });
-   gAA.init(client);
    client.init(done);
   });
 
-  it('Emailが入力できる',function(done) {
-    gAA.enterEmail(CONFIG).then(function(result){
-      expect(result).to.equal('googleAccount.enterPass');
-      client.call(done);
-    });
-  });
-
-  it('Passwordを入力しログインできる',function(done) {
-    gAA.enterPass(CONFIG).then(function(result){
-      expect(result).to.equal('googleSite.goSharingPermissions');
-      client.call(done);
-    });
-  });
-
-  it('Googleサイトの権限設定画面に遷移する',function(done) {
-    gAA.goSharingPermissions(CONFIG).then(function(result){
-      expect(result).to.equal('googleSite.setPermissionSite');
-      client.call(done);
-    });
-  });
-
-  it('サイトレベルでのユーザ毎権限を設定する',function(done) {
-    gAA.setPermissionSite(CONFIG).then(function(result){
-      expect(result).to.equal('googleSite.setEnablePagePermisson');
-      client.call(done);
-    });
-  });
-
-  it('ページレベルのユーザ毎権限を有効化する',function(done) {
-    gAA.setEnablePagePermisson(CONFIG).then(function(result){
-      expect(result).to.equal('googleSite.setPermissionPage');
-      client.call(done);
-    });
-  });
-
-  it('ページレベルの権限を設定する',function(done) {
-    gAA.setPermissionPage(CONFIG).then(function(result){
-      expect(result).to.equal('end');
-      client.call(done);
+  it('低レベルAPIが事前条件どおりに実行できる',function(done) {
+    gAA.enterEmail(client, CONFIG).then(function(){
+      gAA.enterPass(client, CONFIG).then(function(){
+        gAA.goSharingPermissions(client, CONFIG).then(function(){
+          gAA.setPermissionSite(client, CONFIG).then(function(){
+            gAA.setEnablePagePermisson(client, CONFIG).then(function(){
+              gAA.setPermissionPage(client, CONFIG).then(function(){
+                client.call(done);
+              });
+            });
+          });
+        });
+      });
     });
   });
 
