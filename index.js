@@ -44,7 +44,6 @@ var steps = {
       var client = context.client;
       var params = context.params;
       var d = q.defer();
-
       client.url(URL.ACCOUNT_LOGIN).then(function(){
         return client.isExisting(SEL.ACCOUNT_PASS).then(function(isExisting) {
           //ログイン中にパスワードを再入力する場合
@@ -103,7 +102,13 @@ var steps = {
         var enterEmail = function(){
           var d = q.defer();
           client.setValueFor(SEL.INVITE_EMAIL, permission.email).then(function(){
-            return d.resolve();
+            client.waitForVisible(SEL.INVITE_EMAIL_SUGGEST, TOUT_MS).then(function(result){
+              if(result){
+                return d.resolve();
+              }else{
+                return d.reject(new Error(sprintf(EMESSAGE.NOT_EXIST_ACCOUNT, permission.email)));
+              }
+            });
           });
           return d.promise;
         };
@@ -152,6 +157,9 @@ var steps = {
           .then(enterEmail)
           .then(selectPermission)
           .then(registUser)
+          .fail(function(err){
+            d.reject(err);
+          })
           ;
       }
 

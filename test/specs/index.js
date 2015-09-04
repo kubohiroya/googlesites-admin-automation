@@ -155,6 +155,52 @@ describe('check site exist', function(){
   });
 });
 
+describe('アカウントが存在しない場合のテスト', function(){
+  this.timeout(99999999);
+  var client;
+
+  before(function(done){
+   client = webdriverio.remote({ desiredCapabilities: {browserName: 'chrome'} });
+   client.init(done);
+  });
+
+  it('viewerのアカウントが存在しない場合にはエラーとなる', function(done){
+    var other = {
+      siteURL: 'https://sites.google.com/a/cuc.global/dev-y41i3303-01/',
+      owner: ACCOUNT.owner,
+      editors: ['notexistviewers@cuc.global'],
+      viewers: []
+    };
+
+    gAA.setSitePermissions(client, other).then(function(){
+      expect('Error message').to.equal('Error has not occurred');
+    }).catch(function(err){
+      expect(err.message).to.equal(sprintf(EMESSAGE.NOT_EXIST_ACCOUNT, other.editors[0]));
+      client.call(done);
+    });
+  });
+
+
+  it('editorsのアカウントが存在しない場合にはエラーとなる', function(done){
+    var other = {
+      siteURL: 'https://sites.google.com/a/cuc.global/dev-y41i3303-01/',
+      owner: ACCOUNT.owner,
+      editors: [],
+      viewers: ['notexisteditors@cuc.global']
+    };
+    gAA.setSitePermissions(client, other).then(function(){
+      expect('Error message').to.equal('Error has not occurred');
+    }).catch(function(err){
+      expect(err.message).to.equal(sprintf(EMESSAGE.NOT_EXIST_ACCOUNT, other.viewers[0]));
+      client.call(done);
+    });
+  });
+
+  after(function(done) {
+    client.end(done);
+  });
+});
+
 describe('googlesites-admin-automation Low-level API tests', function(){
   this.timeout(99999999);
   var client;

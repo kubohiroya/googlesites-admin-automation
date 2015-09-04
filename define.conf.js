@@ -13,7 +13,7 @@ module.exports.SELECTOR = {
   LOGINED: "//a[contains(@title, '%s')]",
 
   INVITE_EMAIL: "//td[@id=':p.inviter']//textarea",
-  INVITE_EMAIL_SUGGEST: "//div[@role='listbox']/div[@role='option']/div[contains(text(), '%s')]/..",
+  INVITE_EMAIL_SUGGEST: "//div[@role='listbox']/div[@role='option']/div[contains(@class, 'goog-contacts-ui-autocomplete-name-nochat')]",
   INVITE_PERMISSION_LIST: "//td[@id=':p.inviter']//div[@role='listbox']",
   INVITE_PERMISSION_LIST_OPTION: "//div[@role='listbox']/div[@role='menuitemradio']//div[contains(text(), '%s')]/..",
   SEND_NOTICE: "//span[@id=':p.sendNotifications']",
@@ -50,6 +50,7 @@ module.exports.TITLE = {
 
 module.exports.EMESSAGE = {
   NOT_OWNER: 'ログインしているユーザーはサイトのオーナーではありません。',
+  NOT_EXIST_ACCOUNT: '指定されたアカウントが存在しません。 %s',
   SITE_NOTFOUND: '指定されたサイトが存在しません。',
   PAGE_NOTFOUND: '指定されたページが存在しません。'
 };
