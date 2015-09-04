@@ -118,7 +118,7 @@ var steps = {
           //リストボックスを選択
           client.clickFor(SEL.INVITE_PERMISSION_LIST).then(function(){
             //オプションを選択
-            var sel = sprintf(SEL.INVITE_PERMISSION_LIST_OPTION, utils.getLevelText(permission.level));
+            var sel = sprintf(SEL.INVITE_PERMISSION_LIST_OPTION, permission.level);
             return client.clickFor(sel).then(function(){
               return d.resolve();
             });

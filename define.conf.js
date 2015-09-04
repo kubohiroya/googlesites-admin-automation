@@ -54,3 +54,6 @@ module.exports.EMESSAGE = {
   SITE_NOTFOUND: '指定されたサイトが存在しません。',
   PAGE_NOTFOUND: '指定されたページが存在しません。'
 };
+
+module.exports.EDITOR = '編集者';
+module.exports.VIEWER = '閲覧者';
