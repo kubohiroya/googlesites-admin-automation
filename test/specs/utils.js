@@ -24,36 +24,36 @@ describe('utils tests', function(){
     }
   });
 
-  it('getNoNeedUsers()', function(){
+  it('getUnrequiredUsers()', function(){
     var registeredUsers = [
       'user03',
       'user04',
       'user01',
       'user02'
     ];
-    var needUsers = [
+    var requiredUsers = [
       {email: 'user02'},
       {email: 'user03'}
     ];
-    var target = utils.getNoNeedUsers(registeredUsers, needUsers);
+    var target = utils.getUnrequiredUsers(registeredUsers, requiredUsers);
     assert.deepEqual(['user04','user01'], target);
 
-    var target = utils.getNoNeedUsers([], []);
+    var target = utils.getUnrequiredUsers([], []);
     assert.deepEqual([], target);
 
-    var target = utils.getNoNeedUsers('user02', needUsers);
+    var target = utils.getUnrequiredUsers('user02', requiredUsers);
     assert.deepEqual([], target);
 
-    var target = utils.getNoNeedUsers('user02', []);
+    var target = utils.getUnrequiredUsers('user02', []);
     assert.deepEqual(['user02'], target);
   });
 
-  it('editPermissionObj()',function() {
+  it('getUsersByPermissions()',function() {
     var srcUsers = [ 'user03', 'user04', 'user02' ];
     var srcPermissions = [ '閲覧者', '編集者', '編集者' ];
     var dest = {editors: ['user04', 'user02'], viewers: ['user03']};
 
-    var target = utils.editPermissionObj(srcUsers, srcPermissions);
+    var target = utils.getUsersByPermissions(srcUsers, srcPermissions);
 
     assert.deepEqual(target, dest);
   });

@@ -230,7 +230,7 @@ var steps = {
 
         return utils.scopeIframe(client, SEL.IFRAME_SHARE_SETTING, TOUT_MS).then(function(){
           return client.getTextFor(SEL.REGISTERD_ENABLED_USERS).then(function(registeredUsers){
-            var users = utils.getNoNeedUsers(registeredUsers, needUsers);
+            var users = utils.getUnrequiredUsers(registeredUsers, needUsers);
             if(users.length === 0){
               console.log('User to be deleted does not exist.');
               return;
@@ -330,7 +330,7 @@ var steps = {
       return utils.scopeIframe(client, SEL.IFRAME_SHARE_SETTING, TOUT_MS).then(function(){
         client.getTextFor(SEL.REGISTERD_ALL_USERS).then(function(registeredUsers){
           return client.getTextFor(SEL.REGISTERD_PERMISSIONS).then(function(registeredPermissions){
-            context.getSitePermission = utils.editPermissionObj(registeredUsers, registeredPermissions);
+            context.getSitePermission = utils.getUsersByPermissions(registeredUsers, registeredPermissions);
             d.resolve(context);
           });
         });
@@ -357,7 +357,7 @@ var steps = {
           return utils.scopeIframe(client, SEL.IFRAME_SHARE_SETTING, TOUT_MS).then(function(){
             return client.getTextFor(SEL.REGISTERD_ALL_USERS).then(function(registeredUsers){
               return client.getTextFor(SEL.REGISTERD_PERMISSIONS).then(function(registeredPermissions){
-                var obj = utils.editPermissionObj(registeredUsers, registeredPermissions);
+                var obj = utils.getUsersByPermissions(registeredUsers, registeredPermissions);
                 obj.pageURL = permission.pageURL;
                 context.getPagePermission.push(obj);
                 d.resolve(context);
