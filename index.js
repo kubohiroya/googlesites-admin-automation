@@ -44,6 +44,7 @@ var steps = {
       var client = context.client;
       var params = context.params;
       var d = q.defer();
+
       client.url(URL.ACCOUNT_LOGIN).then(function(){
         return client.isExisting(SEL.ACCOUNT_PASS).then(function(isExisting) {
           //ログイン中にパスワードを再入力する場合
@@ -65,6 +66,7 @@ var steps = {
       var client = context.client;
       var params = context.params;
       var d = q.defer();
+
       client.setValueFor(SEL.ACCOUNT_PASS, params.owner.password).then(function() {
         return client.clickFor(SEL.ACCOUNT_SIGNIN).then(function() {
           return client.waitForExist(sprintf(SEL.LOGINED, params.owner.email), TOUT_MS).then(function(){
@@ -77,10 +79,11 @@ var steps = {
   },
 
   googleSite: {
-    goSharingPermissions: function(context) {
+    openAdminCommonSharing: function(context) {
       var client = context.client;
       var params = context.params;
       var d = q.defer();
+
       client.url(params.siteURL + URL.COMMON_SHARING).then(function(){
         return client.getTitle().then(function(txt){
           if(txt.indexOf(TITLE.NOT_OWNER) !== -1){
@@ -95,10 +98,8 @@ var steps = {
       return d.promise;
     },
 
-    setPermissionSite: function(context) {
-      var client = context.client;
-      var params = context.params;
-      function setPermissionSiteEach(permission){
+    setSiteUsers: function(context) {
+      function setSiteUsersEach(permission){
         var enterEmail = function(){
           var d = q.defer();
           client.setValueFor(SEL.INVITE_EMAIL, permission.email).then(function(){
@@ -154,10 +155,13 @@ var steps = {
           ;
       }
 
+      var client = context.client;
+      var params = context.params;
       var d = q.defer();
+
       return utils.scopeIframe(client, SEL.IFRAME_SHARE_SETTING, TOUT_MS).then(function(){
         async.forEachSeries(utils.editPermissionList(params), function(permission, cb){
-          setPermissionSiteEach(permission).then(function(){
+          setSiteUsersEach(permission).then(function(){
             cb();
           });
          }, function() {
@@ -167,10 +171,10 @@ var steps = {
       });
     },
 
-    setEnablePagePermisson: function(context) {
+    setEnablePageLevelPermission: function(context) {
       var client = context.client;
       var params = context.params;
-      function enablePagePermission(){
+      function enablePageLevelPermission(){
         return client.clickFor(SEL.PAGE_ENABLE).then(function(){
           return client.clickFor(SEL.PAGE_ENABLE_CONFIRM).then(function(){
             return client.waitForVisible(SEL.PAGE_DISABLE);
@@ -182,17 +186,19 @@ var steps = {
       return client.refresh().then(function(){
         client.isVisible(SEL.PAGE_ENABLE).then(function(isVisible){
           if(isVisible){
-            enablePagePermission();
+            enablePageLevelPermission().then(function(){
+              d.resolve(context);
+            });
           }else{
-            console.log("alredy enabled.");
+            console.log("already enabled.");
+            d.resolve(context);
           }
-          d.resolve(context);
         });
         return d.promise;
       });
     },
 
-    setPermissionPage: function(context) {
+    setPagePermission: function(context) {
       var client = context.client;
       var params = context.params;
       function deleteNoNeedUser(needUsers){
@@ -237,13 +243,13 @@ var steps = {
         });
       }
 
-      function setPermissionPageEach(permission){
-        var goPageSharingPermissions = function(){
+      function setPagePermissionEach(permission){
+        var openPageAdminCommonSharing = function(){
           var d = q.defer();
           client.url(permission.pageURL).then(function(){
             return client.getTitle().then(function(txt){
               if(txt.indexOf(TITLE.NOT_OWNER) !== -1){
-                throw new Error(EMESSAGE.NOT_OWNER);
+                return d.reject(new Error(EMESSAGE.NOT_OWNER));
               }else if(txt.indexOf(TITLE.PAGE_NOTFOUND_FIREFOX) !== -1
                     || txt.indexOf(TITLE.PAGE_NOTFOUND_CHROME) !== -1){
                 return d.reject(new Error(EMESSAGE.PAGE_NOTFOUND));
@@ -259,8 +265,8 @@ var steps = {
         var openPermissionModal = function(){
           var d = q.defer();
           client.clickFor(SEL.BTN_CHANGE).then(function(){
-              return d.resolve();
-            });
+            return d.resolve();
+          });
           return d.promise;
         };
 
@@ -291,7 +297,7 @@ var steps = {
           return d.promise;
         };
         return q.when()
-          .then(goPageSharingPermissions)
+          .then(openPageAdminCommonSharing)
           .then(openPermissionModal)
           .then(selectPermissionCustom)
           .then(selectPermissionIndependent)
@@ -302,7 +308,7 @@ var steps = {
       var d = q.defer();
       return client.then(function(){
         async.forEachSeries(params.permissions, function(permission, cb){
-          setPermissionPageEach(permission).then(function(){
+          setPagePermissionEach(permission).then(function(){
             var permissionList = {editors: permission.editors, viewers:permission.viewers};
             deleteNoNeedUser(utils.editPermissionList(permission)).then(function(){
               cb();
@@ -317,14 +323,14 @@ var steps = {
       });
     },
 
-    getPermissionSite: function(context) {
+    getSitePermission: function(context) {
       var client = context.client;
       var params = context.params;
       var d = q.defer();
       return utils.scopeIframe(client, SEL.IFRAME_SHARE_SETTING, TOUT_MS).then(function(){
         client.getTextFor(SEL.REGISTERD_ALL_USERS).then(function(registeredUsers){
           return client.getTextFor(SEL.REGISTERD_PERMISSIONS).then(function(registeredPermissions){
-            context.getPermissionSite = utils.editPermissionObj(registeredUsers, registeredPermissions);
+            context.getSitePermission = utils.editPermissionObj(registeredUsers, registeredPermissions);
             d.resolve(context);
           });
         });
@@ -332,11 +338,11 @@ var steps = {
       });
     },
 
-    getPermissionPage: function(context) {
+    getPagePermission: function(context) {
       var client = context.client;
       var params = context.params;
-      function getPermissionPageEach(permission){
-        var goPageSharingPermissions = function(){
+      function getPagePermissionEach(permission){
+        var openPageAdminCommonSharing = function(){
           var d = q.defer();
           client.url(permission.pageURL).then(function(){
             return client.clickFor(SEL.BTN_SHARE).then(function(){
@@ -353,7 +359,7 @@ var steps = {
               return client.getTextFor(SEL.REGISTERD_PERMISSIONS).then(function(registeredPermissions){
                 var obj = utils.editPermissionObj(registeredUsers, registeredPermissions);
                 obj.pageURL = permission.pageURL;
-                context.getPermissionPage.push(obj);
+                context.getPagePermission.push(obj);
                 d.resolve(context);
               });
             });
@@ -362,16 +368,16 @@ var steps = {
         };
 
         return q.when()
-          .then(goPageSharingPermissions)
+          .then(openPageAdminCommonSharing)
           .then(getPermissions)
         ;
       }
 
-      context.getPermissionPage = [];
+      context.getPagePermission = [];
       var d = q.defer();
       return client.then(function(){
         async.forEachSeries(params.permissions, function(permission, cb){
-          getPermissionPageEach(permission).then(function(){
+          getPagePermissionEach(permission).then(function(){
             cb();
           });
          }, function() {
@@ -383,17 +389,17 @@ var steps = {
   }
 };
 
-module.exports.setSitePermissions = function (clientArg, paramsArg) {
-  var context = {client: clientArg, params: paramsArg};
+module.exports.setSitePermissions = function (client, params) {
+  var context = {client: client, params: params};
   init(context);
 
   return q.when(context)
     .then(steps.googleAccount.enterEmail)
     .then(steps.googleAccount.enterPass)
-    .then(steps.googleSite.goSharingPermissions)
-    .then(steps.googleSite.setPermissionSite)
-    .then(steps.googleSite.setEnablePagePermisson)
-    .then(steps.googleSite.setPermissionPage)
+    .then(steps.googleSite.openAdminCommonSharing)
+    .then(steps.googleSite.setSiteUsers)
+    .then(steps.googleSite.setEnablePageLevelPermission)
+    .then(steps.googleSite.setPagePermission)
     .then(function(context){
       var d = q.defer();
       d.resolve();
@@ -405,22 +411,22 @@ module.exports.setSitePermissions = function (clientArg, paramsArg) {
     ;
 };
 
-module.exports.getSitePermissions = function (clientArg, paramsArg) {
-  var context = {client: clientArg, params: paramsArg};
+module.exports.getSitePermissions = function (client, params) {
+  var context = {client: client, params: params};
   init(context);
 
   return q.when(context)
     .then(steps.googleAccount.enterEmail)
     .then(steps.googleAccount.enterPass)
-    .then(steps.googleSite.goSharingPermissions)
-    .then(steps.googleSite.getPermissionSite)
-    .then(steps.googleSite.getPermissionPage)
+    .then(steps.googleSite.openAdminCommonSharing)
+    .then(steps.googleSite.getSitePermission)
+    .then(steps.googleSite.getPagePermission)
     .then(function(context){
       var d = q.defer();
       d.resolve({
-        viewers: context.getPermissionSite.viewers,
-        editors: context.getPermissionSite.editors,
-        permissions: context.getPermissionPage
+        viewers: context.getSitePermission.viewers,
+        editors: context.getSitePermission.editors,
+        permissions: context.getPagePermission
       });
       return d.promise;
     })
@@ -434,17 +440,20 @@ module.exports.getSitePermissions = function (clientArg, paramsArg) {
  *
  * GoogleアカウントでEmailを入力します
  *
+ * 正常終了した際は、Passwordを入力できます。
+ *
  * <example>
- *  gAA.enterEmail(CONFIG);
+ *  gAA.enterEmail(client, CONFIG);
  * </example>
  *
- * @param {Object} params         権限設定情報Object
+ * @param {Object} client      webdriverio Object
+ * @param {Object} params      権限設定情報Object
  *
  * @return {Object}   promise Object
  *
  */
-module.exports.enterEmail = function (clientArg, paramsArg) {
-  var context = {client: clientArg, params: paramsArg};
+module.exports.enterEmail = function (client, params) {
+  var context = {client: client, params: params};
   init(context);
 
   return q.when(context)
@@ -464,17 +473,21 @@ module.exports.enterEmail = function (clientArg, paramsArg) {
  *
  * GoogleアカウントでPasswordを入力します
  *
+ * 実行するためには、Googleアカウントのログイン画面でEmailの入力が完了し、Passwordを入力できる状態にしておく必要があります。
+ * 正常終了した際は、Googleアカウントへのログインが完了します。
+ *
  * <example>
- *  gAA.enterPass(CONFIG);
+ *  gAA.enterPass(client, CONFIG);
  * </example>
  *
- * @param {Object} params         権限設定情報Object
+ * @param {Object} client      webdriverio Object
+ * @param {Object} params      権限設定情報Object
  *
  * @return {Object}   promise Object
  *
  */
-module.exports.enterPass = function (clientArg, paramsArg) {
-  var context = {client: clientArg, params: paramsArg};
+module.exports.enterPass = function (client, params) {
+  var context = {client: client, params: params};
   init(context);
 
   return q.when(context)
@@ -492,23 +505,27 @@ module.exports.enterPass = function (clientArg, paramsArg) {
 
 /**
  *
- * Googleサイトの権限設定画面に遷移します
+ * Googleサイトの共有と権限設定画面に遷移します
+ *
+ * 実行するためには、ログインが完了した状態にしておく必要があります。
+ * 正常終了した際は、Googleサイトの共有と権限を設定する画面に遷移します。
  *
  * <example>
- *  gAA.goSharingPermissions(CONFIG);
+ *  gAA.openAdminCommonSharing(client, CONFIG);
  * </example>
  *
- * @param {Object} params         権限設定情報Object
+ * @param {Object} client      webdriverio Object
+ * @param {Object} params      権限設定情報Object
  *
  * @return {Object}   promise Object
  *
  */
-module.exports.goSharingPermissions = function (clientArg, paramsArg) {
-  var context = {client: clientArg, params: paramsArg};
+module.exports.openAdminCommonSharing = function (client, params) {
+  var context = {client: client, params: params};
   init(context);
 
   return q.when(context)
-    .then(steps.googleSite.goSharingPermissions)
+    .then(steps.googleSite.openAdminCommonSharing)
     .then(function(){
       var d = q.defer();
       d.resolve();
@@ -522,23 +539,27 @@ module.exports.goSharingPermissions = function (clientArg, paramsArg) {
 
 /**
  *
- * Googleサイトのサイトレベルでのユーザ毎権限を設定します
+ * Googleサイトを使用するユーザを登録します
+ *
+ * 実行するためには、Googleサイトの共有と権限を設定する画面を表示しておく必要があります。
+ * 各ユーザのサイトレベルの権限（編集者、閲覧者等）も合わせて登録できます。
  *
  * <example>
- *  gAA.setPermissionSite(CONFIG);
+ *  gAA.setSiteUsers(client, CONFIG);
  * </example>
  *
- * @param {Object} params         権限設定情報Object
+ * @param {Object} client      webdriverio Object
+ * @param {Object} params      権限設定情報Object
  *
  * @return {Object}   promise Object
  *
  */
-module.exports.setPermissionSite = function (clientArg, paramsArg) {
-  var context = {client: clientArg, params: paramsArg};
+module.exports.setSiteUsers = function (client, params) {
+  var context = {client: client, params: params};
   init(context);
 
   return q.when(context)
-    .then(steps.googleSite.setPermissionSite)
+    .then(steps.googleSite.setSiteUsers)
     .then(function(){
       var d = q.defer();
       d.resolve();
@@ -554,21 +575,25 @@ module.exports.setPermissionSite = function (clientArg, paramsArg) {
  *
  * Googleサイトのページレベルのユーザ毎権限を有効化します
  *
+ * 実行するためには、Googleサイトの共有と権限を設定する画面を表示しておく必要があります。
+ * 正常終了した際は、ページレベルのユーザ毎権限が設定可能となります。
+ *
  * <example>
- *  gAA.setEnablePagePermisson(CONFIG);
+ *  gAA.setEnablePageLevelPermission(client, CONFIG);
  * </example>
  *
- * @param {Object} params         権限設定情報Object
+ * @param {Object} client      webdriverio Object
+ * @param {Object} params      権限設定情報Object
  *
  * @return {Object}   promise Object
  *
  */
-module.exports.setEnablePagePermisson = function (clientArg, paramsArg) {
-  var context = {client: clientArg, params: paramsArg};
+module.exports.setEnablePageLevelPermission = function (client, params) {
+  var context = {client: client, params: params};
   init(context);
 
   return q.when(context)
-    .then(steps.googleSite.setEnablePagePermisson)
+    .then(steps.googleSite.setEnablePageLevelPermission)
     .then(function(){
       var d = q.defer();
       d.resolve();
@@ -584,21 +609,26 @@ module.exports.setEnablePagePermisson = function (clientArg, paramsArg) {
  *
  * Googleサイトのページごとに権限を設定します
  *
+ * 実行するためには、Googleサイトの共有と権限を設定する画面を表示しておく必要があります。
+ * また、ページレベルのユーザ毎権限を有効化しておく必要もあります。
+ * 正常終了した際は、ページレベルのユーザ毎権限が設定された状態となります。
+ *
  * <example>
- *  gAA.setPermissionPage(CONFIG);
+ *  gAA.setPagePermission(client, CONFIG);
  * </example>
  *
- * @param {Object} params         権限設定情報Object
+ * @param {Object} client      webdriverio Object
+ * @param {Object} params      権限設定情報Object
  *
  * @return {Object}   promise Object
  *
  */
-module.exports.setPermissionPage = function (clientArg, paramsArg) {
-  var context = {client: clientArg, params: paramsArg};
+module.exports.setPagePermission = function (client, params) {
+  var context = {client: client, params: params};
   init(context);
 
   return q.when(context)
-    .then(steps.googleSite.setPermissionPage)
+    .then(steps.googleSite.setPagePermission)
     .then(function(){
       var d = q.defer();
       d.resolve();

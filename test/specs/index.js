@@ -87,7 +87,7 @@ describe('check other owner test', function(){
     var other = {owner: ACCOUNT.other};
     gAA.enterEmail(client, other).then(function(){
       gAA.enterPass(client, other).then(function(){
-        gAA.goSharingPermissions(client, CONFIG).then(function(result){
+        gAA.openAdminCommonSharing(client, CONFIG).then(function(result){
           expect('Error message').to.equal('Error has not occurred');
         }).catch(function(err){
           expect(err.message).to.equal(EMESSAGE.NOT_OWNER);
@@ -118,7 +118,7 @@ describe('check site exist', function(){
     };
     gAA.enterEmail(client, other).then(function(){
       gAA.enterPass(client, other).then(function(){
-        gAA.goSharingPermissions(client, other).then(function(result){
+        gAA.openAdminCommonSharing(client, other).then(function(result){
           expect('Error message').to.equal('Error has not occurred');
         }).catch(function(err){
           expect(err.message).to.equal(EMESSAGE.SITE_NOTFOUND);
@@ -140,7 +140,7 @@ describe('check site exist', function(){
     };
     gAA.enterEmail(client, other).then(function(){
       gAA.enterPass(client, other).then(function(){
-        gAA.setPermissionPage(client, other).then(function(result){
+        gAA.setPagePermission(client, other).then(function(result){
           expect('Error message').to.equal('Error has not occurred');
         }).catch(function(err){
           expect(err.message).to.equal(EMESSAGE.PAGE_NOTFOUND);
@@ -167,10 +167,10 @@ describe('googlesites-admin-automation Low-level API tests', function(){
   it('低レベルAPIが事前条件どおりに実行できる',function(done) {
     gAA.enterEmail(client, CONFIG).then(function(){
       gAA.enterPass(client, CONFIG).then(function(){
-        gAA.goSharingPermissions(client, CONFIG).then(function(){
-          gAA.setPermissionSite(client, CONFIG).then(function(){
-            gAA.setEnablePagePermisson(client, CONFIG).then(function(){
-              gAA.setPermissionPage(client, CONFIG).then(function(){
+        gAA.openAdminCommonSharing(client, CONFIG).then(function(){
+          gAA.setSiteUsers(client, CONFIG).then(function(){
+            gAA.setEnablePageLevelPermission(client, CONFIG).then(function(){
+              gAA.setPagePermission(client, CONFIG).then(function(){
                 client.call(done);
               });
             });
@@ -184,3 +184,4 @@ describe('googlesites-admin-automation Low-level API tests', function(){
     client.end(done);
   });
 });
+
