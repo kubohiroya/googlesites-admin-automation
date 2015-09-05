@@ -168,14 +168,14 @@ describe('アカウントが存在しない場合のテスト', function(){
     var other = {
       siteURL: 'https://sites.google.com/a/cuc.global/dev-y41i3303-01/',
       owner: ACCOUNT.owner,
-      editors: ['notexistviewers@cuc.global'],
-      viewers: []
+      viewers: ['notexistviewers@cuc.global'],
+      editors: []
     };
 
     gAA.setSitePermissions(client, other).then(function(){
       expect('Error message').to.equal('Error has not occurred');
     }).catch(function(err){
-      expect(err.message).to.equal(sprintf(EMESSAGE.NOT_EXIST_ACCOUNT, other.editors[0]));
+      expect(err.message).to.equal(sprintf(EMESSAGE.NOT_EXIST_ACCOUNT, other.viewers[0]));
       client.call(done);
     });
   });
@@ -185,13 +185,13 @@ describe('アカウントが存在しない場合のテスト', function(){
     var other = {
       siteURL: 'https://sites.google.com/a/cuc.global/dev-y41i3303-01/',
       owner: ACCOUNT.owner,
-      editors: [],
-      viewers: ['notexisteditors@cuc.global']
+      viewers: [],
+      editors: ['notexisteditors@cuc.global']
     };
     gAA.setSitePermissions(client, other).then(function(){
       expect('Error message').to.equal('Error has not occurred');
     }).catch(function(err){
-      expect(err.message).to.equal(sprintf(EMESSAGE.NOT_EXIST_ACCOUNT, other.viewers[0]));
+      expect(err.message).to.equal(sprintf(EMESSAGE.NOT_EXIST_ACCOUNT, other.editors[0]));
       client.call(done);
     });
   });
@@ -231,3 +231,29 @@ describe('googlesites-admin-automation Low-level API tests', function(){
   });
 });
 
+describe('Low-level API status tests', function(){
+  this.timeout(99999999);
+  var client;
+
+  before(function(done){
+   client = webdriverio.remote({ desiredCapabilities: {browserName: 'chrome'} });
+   client.init(done);
+  });
+
+  it('',function(done) {
+    gAA.enterPass(client, CONFIG).then(function(){
+      expect('Error message').to.equal('Error has not occurred');
+    }).catch(function(err){
+      expect(err.message).to.equal(sprintf(EMESSAGE.ILLIGAL_STATE, 'enterPass()'));
+      client.call(done);
+    });
+  });
+        // gAA.openAdminCommonSharing(client, CONFIG).then(function(){
+        //   gAA.setSiteUsers(client, CONFIG).then(function(){
+        //     gAA.setEnablePageLevelPermission(client, CONFIG).then(function(){
+        //       gAA.setPagePermission(client, CONFIG).then(function(){
+
+  after(function(done) {
+    client.end(done);
+  });
+});

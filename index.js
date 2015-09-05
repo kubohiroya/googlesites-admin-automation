@@ -44,6 +44,13 @@ var steps = {
       var client = context.client;
       var params = context.params;
       var d = q.defer();
+
+      function waitUntil(){
+        return client.waitForExist(SEL.ACCOUNT_PASS, TOUT_MS).then(function(){
+          d.resolve(context);
+        });
+      }
+
       client.url(URL.ACCOUNT_LOGIN).then(function(){
         return client.isExisting(SEL.ACCOUNT_PASS).then(function(isExisting) {
           //ログイン中にパスワードを再入力する場合
@@ -51,9 +58,7 @@ var steps = {
             d.resolve(context);
           }else{
             return client.setValueFor(SEL.ACCOUNT_EMAIL, params.owner.email).then(function() {
-              return client.clickFor(SEL.ACCOUNT_NEXT).then(function() {
-                d.resolve(context);
-              });
+              return client.clickFor(SEL.ACCOUNT_NEXT).then(waitUntil);
             });
           }
         });
@@ -66,11 +71,23 @@ var steps = {
       var params = context.params;
       var d = q.defer();
 
-      client.setValueFor(SEL.ACCOUNT_PASS, params.owner.password).then(function() {
-        return client.clickFor(SEL.ACCOUNT_SIGNIN).then(function() {
-          return client.waitForExist(sprintf(SEL.LOGINED, params.owner.email), TOUT_MS).then(function(){
-            d.resolve(context);
-          });
+      function checkCondition(){
+        return client.waitForVisible(SEL.ACCOUNT_PASS, TOUT_MS).then(function(result){
+          if(!result){
+            d.reject(new Error(sprintf(EMESSAGE.ILLIGAL_STATE, 'enterPass()')));
+          }
+        });
+      }
+
+      function waitUntil(){
+        return client.waitForExist(sprintf(SEL.LOGINED, params.owner.email), TOUT_MS).then(function(){
+          d.resolve(context);
+        });
+      }
+
+      checkCondition().then(function(){
+        return client.setValueFor(SEL.ACCOUNT_PASS, params.owner.password).then(function() {
+          return client.clickFor(SEL.ACCOUNT_SIGNIN).then(waitUntil);
         });
       });
       return d.promise;
@@ -102,12 +119,14 @@ var steps = {
         var enterEmail = function(){
           var d = q.defer();
           client.setValueFor(SEL.INVITE_EMAIL, permission.email).then(function(){
+            client.pause(1 * 1000).then(function(){ //TODO;StaleElementReferenceExceptionの仮対応
             client.waitForVisible(SEL.INVITE_EMAIL_SUGGEST, TOUT_MS).then(function(result){
               if(result){
                 return d.resolve();
               }else{
                 return d.reject(new Error(sprintf(EMESSAGE.NOT_EXIST_ACCOUNT, permission.email)));
               }
+            });
             });
           });
           return d.promise;
@@ -446,7 +465,7 @@ module.exports.getSitePermissions = function (client, params) {
 
 /**
  *
- * GoogleアカウントでEmailを入力します
+ * Googleアカウントログイン画面でEmailを入力します
  *
  * 正常終了した際は、Passwordを入力できます。
  *
@@ -479,7 +498,7 @@ module.exports.enterEmail = function (client, params) {
 
 /**
  *
- * GoogleアカウントでPasswordを入力します
+ * Googleアカウントログイン画面でPasswordを入力します
  *
  * 実行するためには、Googleアカウントのログイン画面でEmailの入力が完了し、Passwordを入力できる状態にしておく必要があります。
  * 正常終了した際は、Googleアカウントへのログインが完了します。
@@ -581,7 +600,7 @@ module.exports.setSiteUsers = function (client, params) {
 
 /**
  *
- * Googleサイトのページレベルのユーザ毎権限を有効化します
+ * Googleサイトのページレベルのユーザ毎権限を有効にします
  *
  * 実行するためには、Googleサイトの共有と権限を設定する画面を表示しておく必要があります。
  * 正常終了した際は、ページレベルのユーザ毎権限が設定可能となります。
@@ -618,7 +637,7 @@ module.exports.setEnablePageLevelPermission = function (client, params) {
  * Googleサイトのページごとに権限を設定します
  *
  * 実行するためには、Googleサイトの共有と権限を設定する画面を表示しておく必要があります。
- * また、ページレベルのユーザ毎権限を有効化しておく必要もあります。
+ * また、ページレベルのユーザ毎権限を有効にしておく必要もあります。
  * 正常終了した際は、ページレベルのユーザ毎権限が設定された状態となります。
  *
  * <example>

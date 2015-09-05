@@ -51,6 +51,8 @@ module.exports.TITLE = {
 module.exports.EMESSAGE = {
   NOT_OWNER: 'ログインしているユーザーはサイトのオーナーではありません。',
   NOT_EXIST_ACCOUNT: '指定されたアカウントが存在しません。 %s',
+  ILLIGAL_ARGUMENT: '必要なプロパティが存在しません。%s',
+  ILLIGAL_STATE: '実行できる状態ではありません。%s',
   SITE_NOTFOUND: '指定されたサイトが存在しません。',
   PAGE_NOTFOUND: '指定されたページが存在しません。'
 };
