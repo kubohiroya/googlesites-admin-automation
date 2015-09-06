@@ -84,10 +84,13 @@ describe('check other owner test', function(){
   });
 
   it('オーナーが指定されたユーザではない場合にはエラーとなる', function(done){
-    var other = {owner: ACCOUNT.other};
+    var other = {
+      siteURL: CONFIG.siteURL,
+      owner: ACCOUNT.other
+    };
     gAA.enterEmail(client, other).then(function(){
       gAA.enterPass(client, other).then(function(){
-        gAA.openAdminCommonSharing(client, CONFIG).then(function(result){
+        gAA.openAdminCommonSharing(client, other).then(function(result){
           expect('Error message').to.equal('Error has not occurred');
         }).catch(function(err){
           expect(err.message).to.equal(EMESSAGE.NOT_OWNER);
@@ -210,14 +213,20 @@ describe('googlesites-admin-automation Low-level API tests', function(){
    client.init(done);
   });
 
-  it('低レベルAPIが事前条件どおりに実行できる',function(done) {
+  it('低レベルAPIが実行できる',function(done) {
     gAA.enterEmail(client, CONFIG).then(function(){
       gAA.enterPass(client, CONFIG).then(function(){
         gAA.openAdminCommonSharing(client, CONFIG).then(function(){
           gAA.setSiteUsers(client, CONFIG).then(function(){
             gAA.setEnablePageLevelPermission(client, CONFIG).then(function(){
               gAA.setPagePermission(client, CONFIG).then(function(){
-                client.call(done);
+                gAA.openAdminCommonSharing(client, CONFIG).then(function(){
+                  gAA.getSitePermission(client, CONFIG).then(function(){
+                    gAA.getPagePermission(client, CONFIG).then(function(){
+                      client.call(done);
+                    });
+                  });
+                });
               });
             });
           });
@@ -240,7 +249,7 @@ describe('Low-level API status tests', function(){
    client.init(done);
   });
 
-  it('',function(done) {
+  it('enterPass()の事前条件が満たされていない場合はエラーとなる',function(done) {
     gAA.enterPass(client, CONFIG).then(function(){
       expect('Error message').to.equal('Error has not occurred');
     }).catch(function(err){
@@ -248,7 +257,15 @@ describe('Low-level API status tests', function(){
       client.call(done);
     });
   });
-        // gAA.openAdminCommonSharing(client, CONFIG).then(function(){
+
+  it('openAdminCommonSharing()の事前条件が満たされていない場合はエラーとなる',function(done) {
+    gAA.openAdminCommonSharing(client, CONFIG).then(function(){
+      expect('Error message').to.equal('Error has not occurred');
+    }).catch(function(err){
+      expect(err.message).to.equal(sprintf(EMESSAGE.ILLIGAL_STATE, 'openAdminCommonSharing()'));
+      client.call(done);
+    });
+  });
         //   gAA.setSiteUsers(client, CONFIG).then(function(){
         //     gAA.setEnablePageLevelPermission(client, CONFIG).then(function(){
         //       gAA.setPagePermission(client, CONFIG).then(function(){

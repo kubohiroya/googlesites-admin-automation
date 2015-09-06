@@ -99,8 +99,15 @@ var steps = {
       var client = context.client;
       var params = context.params;
       var d = q.defer();
+      function checkCondition(){
+        return client.waitForExist(sprintf(SEL.LOGINED, params.owner.email), TOUT_MS).then(function(result){
+          if(!result){
+            d.reject(new Error(sprintf(EMESSAGE.ILLIGAL_STATE, 'openAdminCommonSharing()')));
+          }
+        });
+      }
 
-      client.url(params.siteURL + URL.COMMON_SHARING).then(function(){
+      function waitUntil(){
         return client.getTitle().then(function(txt){
           if(txt.indexOf(TITLE.NOT_OWNER) !== -1){
             d.reject(new Error(EMESSAGE.NOT_OWNER));
@@ -110,6 +117,10 @@ var steps = {
           }
           d.resolve(context);
         });
+      }
+
+      checkCondition().then(function(){
+        return client.url(params.siteURL + URL.COMMON_SHARING).then(waitUntil);
       });
       return d.promise;
     },
@@ -192,6 +203,7 @@ var steps = {
             cb();
           });
          }, function() {
+           client.frame();  //frameのフォーカスを移動したままだと、次のpromised stepにてエレメントが見つからない場合があるため。
            d.resolve(context);
         });
         return d.promise;
@@ -333,7 +345,7 @@ var steps = {
       }
 
       var d = q.defer();
-      return client.then(function(){
+      client.then(function(){
         async.forEachSeries(params.permissions, function(permission, cb){
           setPagePermissionEach(permission).then(function(){
             var permissionList = {editors: permission.editors, viewers:permission.viewers};
@@ -343,17 +355,19 @@ var steps = {
           }).catch(function(err){
             d.reject(err);
           });
-         }, function() {
+        }, function() {
+           client.frame();  //frameのフォーカスを移動したままだと、次のpromised stepにてエレメントが見つからない場合があるため。
            d.resolve(context);
         });
-        return d.promise;
       });
+      return d.promise;
     },
 
     getSitePermission: function(context) {
       var client = context.client;
       var params = context.params;
       var d = q.defer();
+
       return utils.scopeIframe(client, SEL.IFRAME_SHARE_SETTING, TOUT_MS).then(function(){
         client.getTextFor(SEL.REGISTERD_ALL_USERS).then(function(registeredUsers){
           return client.getTextFor(SEL.REGISTERD_PERMISSIONS).then(function(registeredPermissions){
@@ -368,6 +382,7 @@ var steps = {
     getPagePermission: function(context) {
       var client = context.client;
       var params = context.params;
+
       function getPagePermissionEach(permission){
         var openPageAdminCommonSharing = function(){
           var d = q.defer();
@@ -636,7 +651,7 @@ module.exports.setEnablePageLevelPermission = function (client, params) {
  *
  * Googleサイトのページごとに権限を設定します
  *
- * 実行するためには、Googleサイトの共有と権限を設定する画面を表示しておく必要があります。
+ * 実行するためには、ログインが完了した状態にしておく必要があります。
  * また、ページレベルのユーザ毎権限を有効にしておく必要もあります。
  * 正常終了した際は、ページレベルのユーザ毎権限が設定された状態となります。
  *
@@ -659,6 +674,73 @@ module.exports.setPagePermission = function (client, params) {
     .then(function(){
       var d = q.defer();
       d.resolve();
+      return d.promise;
+    })
+    .fail(function(err){
+      throw err;
+    })
+  ;
+};
+
+/**
+ *
+ * Googleサイトの使用可能なユーザを取得します
+ *
+ * 実行するためには、Googleサイトの共有と権限を設定する画面を表示しておく必要があります。
+ * 各ユーザのサイトレベルの権限（編集者、閲覧者等）も合わせて取得できます。
+ *
+ * <example>
+ *  gAA.getSitePermission(client, CONFIG);
+ * </example>
+ *
+ * @param {Object} client      webdriverio Object
+ * @param {Object} params      権限設定情報Object
+ *
+ * @return {Object}   promise Object
+ *
+ */
+module.exports.getSitePermission = function (client, params) {
+  var context = {client: client, params: params};
+  init(context);
+
+  return q.when(context)
+    .then(steps.googleSite.getSitePermission)
+    .then(function(context){
+      var d = q.defer();
+      d.resolve(context.getSitePermission);
+      return d.promise;
+    })
+    .fail(function(err){
+      throw err;
+    })
+  ;
+};
+
+/**
+ *
+ * Googleサイトのページごとに設定されたユーザと権限を取得します
+ *
+ * 実行するためには、ログインが完了した状態にしておく必要があります。
+ *
+ * <example>
+ *  gAA.getPagePermission(client, CONFIG);
+ * </example>
+ *
+ * @param {Object} client      webdriverio Object
+ * @param {Object} params      権限設定情報Object
+ *
+ * @return {Object}   promise Object
+ *
+ */
+module.exports.getPagePermission = function (client, params) {
+  var context = {client: client, params: params};
+  init(context);
+
+  return q.when(context)
+    .then(steps.googleSite.getPagePermission)
+    .then(function(context){
+      var d = q.defer();
+      d.resolve(context.getPagePermission);
       return d.promise;
     })
     .fail(function(err){
