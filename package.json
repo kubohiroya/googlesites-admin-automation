@@ -3,15 +3,23 @@
   "version": "0.0.0",
   "description": "",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/kubohiroya/googlesites-admin-automation.git"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node_modules/.bin/mocha test/specs/*"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "async": "^1.4.2",
-    "chai": "^3.2.0",
     "q": "^1.4.1",
     "webdriverio": "^3.1.0"
+  },
+  "devDependencies": {
+    "chai": "^3.2.0",
+    "mocha": "^2.3.2",
+    "selenium-standalone": "^4.6.0"
   }
 }
